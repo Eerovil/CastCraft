@@ -3,3 +3,5 @@ Flask_SocketIO
 Flask
 sqlitedict
 openai
+pydantic
+pydantic-to-typescript
