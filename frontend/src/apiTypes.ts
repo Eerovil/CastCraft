@@ -8,10 +8,6 @@
 export interface BasicAnimation {
   type: "shake" | "rotate";
 }
-export interface Coordinates {
-  x: number;
-  y: number;
-}
 export interface Entity {
   id: number;
   width: number;
@@ -22,11 +18,16 @@ export interface Entity {
   y_from: number;
   speed: number;
   animations: BasicAnimation[];
-  sprite: Sprite;
+  sprites: Sprite[][];
+  sprite_speed: number;
 }
 export interface Sprite {
-  slug: string;
   url: string;
-  animation_speed: number;
-  coordinates: Coordinates[];
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+export interface TileSize {
+  width: 32;
 }

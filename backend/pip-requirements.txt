@@ -5,3 +5,4 @@ sqlitedict
 openai
 pydantic
 pydantic-to-typescript
+gevent

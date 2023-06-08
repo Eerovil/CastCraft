@@ -22,8 +22,6 @@ const URL = undefined;
 
 export const socket = io(URL);
 
-const 
-
 export default defineComponent({
   data() {
     return {

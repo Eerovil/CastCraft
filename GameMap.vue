@@ -40,7 +40,7 @@ export default defineComponent({
       }
       // Draw sprite entity.url at entity.x and entity.y
       // ...
-      const img = this.getImg(entity.sprite.url)
+      const img = this.getImg(entity.sprites[0][0].url)
       ctx.drawImage(img, entity.x, entity.y, entity.width, entity.height);
     }
   }

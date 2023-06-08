@@ -2,20 +2,20 @@ from pydantic import BaseModel
 from typing import List, Optional, Literal  # noqa
 
 
+class TileSize(BaseModel):
+    width: Literal[32]
+
+
 class BasicAnimation(BaseModel):
     type: Literal["shake", "rotate"]
 
 
-class Coordinates(BaseModel):
+class Sprite(BaseModel):
+    url: str
     x: int
     y: int
-
-
-class Sprite(BaseModel):
-    slug: str
-    url: str
-    animation_speed: int
-    coordinates: List[Coordinates]  # for sprite tile animation
+    width: int
+    height: int
 
 
 class Entity(BaseModel):
@@ -28,5 +28,5 @@ class Entity(BaseModel):
     y_from: int
     speed: int
     animations: List[BasicAnimation]
-    sprite: Sprite
-
+    sprites: List[List[Sprite]]
+    sprite_speed: int
