@@ -1,0 +1,5 @@
+eventlet
+Flask_SocketIO
+Flask
+sqlitedict
+openai
