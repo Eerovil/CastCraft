@@ -11,7 +11,7 @@ BASE_URL = '/sprites/cozy_people/'
 TILE_SIZE = 32  # 32*32 pixels tiled pngs
 CHAR_WIDTH = 8  # 8 tiles wide  (Also used for colors)
 TOOL_HEIGHT = 4  # 4 tiles of height for each tool (max of 8 * 4 = 32 sprites per tool)
-PADDINGS = (0, 0, 0, 0)  # Padding for each tile (top, right, bottom, left)
+PADDINGS = (1, 0, 0, 0)  # Padding for each tile (top, right, bottom, left)
 
 # We will have 6 different layers.
 LAYERS = [

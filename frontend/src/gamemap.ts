@@ -34,23 +34,23 @@ class MapDrawer {
             }
             this.playerX = player.x
             this.playerY = player.y
-            // Center on player
-            // Origin is at player x minus half of screen width
-            // and player y minus half of screen height
-            ctx.translate(
-                player.x - (window.innerWidth / 2),
-                player.y - (window.innerHeight / 2)
-            )
-            ctx.scale(3, 3)
-            console.log('isMobile', player.x, player.y)
+            // zoom in to center
+            // ctx.scale(2, 2)
+            // ctx.translate(canvas.width / 2, canvas.height / 2)
+            const scale = 3
+            const widthNew = ctx.canvas.width / 2;
+            const heightNew = ctx.canvas.height / 2;
+            ctx.setTransform(scale, 0, 0, scale, -(scale - 1) * widthNew, -(scale - 1) * heightNew);
+            console.log('isMobile', player.x, player.y, this.canvas.width, this.canvas.height)
         }
     }
 
     redrawAllEntities() {
         const canvas = this.canvas;
         const ctx = this.ctx;
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        ctx.clearRect(-canvas.width, -canvas.height, canvas.width * 2, canvas.height * 2)
         const promises: Promise<void>[] = []
+        this.drawGrid(ctx)
         for (const entity of Object.values(this.entities)) {
             promises.push(this.drawEntity(ctx, entity))
         }
@@ -59,15 +59,15 @@ class MapDrawer {
                 setTimeout(() => {
                     this.animationIndex += 1
                     this.redrawAllEntities()
-                }, 100)
+                }, 33)  // 30fps = 1000/30 = 33.333
             })
         })
     }
 
     convertCoordinates(x: number, y: number) {
         // If playerId is set, center on player
-        // so if player is at 50,50 and this function is called with 0,0
-        // it should return -50,-50
+        // New origin is at player x - (canvas.width / 2), player y - (canvas.height / 2)
+        // So we must subtract that from the coordinates
         if (!this.playerId) {
             return { x, y }
         }
@@ -76,8 +76,8 @@ class MapDrawer {
             return { x, y }
         }
         return {
-            x: x - this.playerX,
-            y: y - this.playerY,
+            x: x - (this.playerX - (this.canvas.width / 2)) - (32 / 2),
+            y: y - (this.playerY - (this.canvas.height / 2)) - 32,
         }
     }
 
@@ -94,6 +94,31 @@ class MapDrawer {
         })
         this.preloadedImages[url] = img
         return img
+    }
+    async drawGrid(ctx: CanvasRenderingContext2D) {
+        // Draw a 32*32 grid starting at 0,0 to all directions
+
+        const { x: originX, y: originY } = this.convertCoordinates(0, 0)
+
+        let x = originX - (32 * 100);
+        let y = originY - (32 * 100);
+
+        while (x < originX + (32 * 100)) {
+            // Draw vertical line
+            ctx.beginPath();
+            ctx.moveTo(x, -1000);
+            ctx.lineTo(x, 1000);
+            ctx.stroke();
+            x += 32;
+        }
+
+        while (y < originY + (32 * 100)) {
+            ctx.beginPath();
+            ctx.moveTo(-1000, y);
+            ctx.lineTo(1000, y);
+            ctx.stroke();
+            y += 32;
+        }
     }
     async drawEntity(ctx: CanvasRenderingContext2D, entity: Entity) {
         // Draw sprite entity.url at entity.x and entity.y
@@ -143,8 +168,12 @@ class MapDrawer {
             ctx.drawImage(
                 img,
                 sprite.x, sprite.y, sprite.width, sprite.height,
-                x + 100, y + 200, entity.width, entity.height
+                x - (32 / 2), y - 32 - 2, entity.width, entity.height
             );
+            // Draw a dot at the x/y of the entity
+            ctx.fillStyle = 'red'
+            ctx.fillRect(x, y, 1, 1)
+
         }
     }
 }
@@ -152,5 +181,6 @@ class MapDrawer {
 
 export function drawGameMap(canvas: HTMLCanvasElement, globalEntityMap: EntityMap) {
     const mapDrawer = new MapDrawer(globalEntityMap, canvas)
-    mapDrawer.redrawAllEntities()
+    mapDrawer.redrawAllEntities();
+    (window as any).mapDrawer = mapDrawer;
 }

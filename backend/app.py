@@ -112,10 +112,10 @@ def update_actions() -> list:
 def init_test_entity_db():
     first_entity = CozyEntity(
         id="0",
-        width=32,
-        height=32,
-        x=0,
-        y=0,
+        width=64,
+        height=64,
+        x=10 * 32,
+        y=10 * 32,
         x_from=0,
         y_from=0,
         speed=0,
@@ -139,10 +139,10 @@ def init_test_entity_db():
 
     second_entity = CozyEntity(
         id="1",
-        width=32,
-        height=32,
-        x=1 * 32,
-        y=1 * 32,
+        width=64,
+        height=64,
+        x=11 * 32,
+        y=11 * 32,
         x_from=0,
         y_from=0,
         speed=0,
