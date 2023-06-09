@@ -11,6 +11,7 @@ BASE_URL = '/sprites/cozy_people/'
 TILE_SIZE = 32  # 32*32 pixels tiled pngs
 CHAR_WIDTH = 8  # 8 tiles wide  (Also used for colors)
 TOOL_HEIGHT = 4  # 4 tiles of height for each tool (max of 8 * 4 = 32 sprites per tool)
+PADDINGS = (0, 0, 0, 0)  # Padding for each tile (top, right, bottom, left)
 
 # We will have 6 different layers.
 LAYERS = [
@@ -68,8 +69,8 @@ ANIMATION_LENGTH['hoe'] = 5
 ANIMATION_LENGTH['water'] = 5
 
 ClothesType = Literal[
-    "basic", "clown", "dress ", "floral", "overalls", "pants_suit", "pants", "pumpkin",
-    "sailor_bow", "sailor", "shoes", "skirt", "skull", "spaghetti", "spooky ", "sporty",
+    "basic", "clown", "dress ", "floral", "pumpkin",
+    "sailor_bow", "sailor", "skull", "spaghetti", "spooky ", "sporty",
     "stripe", "suit", "witch"
 ]
 CLOTHES_CHOICES: dict[ClothesType: int] = {}
@@ -77,14 +78,9 @@ CLOTHES_CHOICES["basic"] = 10  # 10 different colors
 CLOTHES_CHOICES["clown"] = 2
 CLOTHES_CHOICES["dress"] = 10
 CLOTHES_CHOICES["floral"] = 10
-CLOTHES_CHOICES["overalls"] = 10
-CLOTHES_CHOICES["pants_suit"] = 10
-CLOTHES_CHOICES["pants"] = 10
 CLOTHES_CHOICES["pumpkin"] = 2
 CLOTHES_CHOICES["sailor_bow"] = 10
 CLOTHES_CHOICES["sailor"] = 10
-CLOTHES_CHOICES["shoes"] = 10
-CLOTHES_CHOICES["skirt"] = 10
 CLOTHES_CHOICES["skull"] = 10
 CLOTHES_CHOICES["spaghetti"] = 10
 CLOTHES_CHOICES["spooky"] = 1
@@ -92,6 +88,21 @@ CLOTHES_CHOICES["sporty"] = 10
 CLOTHES_CHOICES["stripe"] = 10
 CLOTHES_CHOICES["suit"] = 10
 CLOTHES_CHOICES["witch"] = 1
+
+PantsType = Literal[
+    "pants", "pants_suit", "skirt", "overalls"
+]
+PANTS_CHOICES: dict[PantsType: int] = {}
+PANTS_CHOICES["pants"] = 10
+PANTS_CHOICES["pants_suit"] = 10
+PANTS_CHOICES["skirt"] = 10
+PANTS_CHOICES["overalls"] = 10
+
+ShoesType = Literal[
+    "shoes",
+]
+SHOES_CHOICES: dict[ShoesType: int] = {}
+SHOES_CHOICES["shoes"] = 10
 
 EyesType = Literal[
     "eyes"
@@ -147,13 +158,17 @@ HAIR_CHOICES["wavy"] = 14
 class CharacterChoice(BaseModel):
     char_index: int
     clothes: Optional[ClothesType]
-    clothes_color: int
+    clothes_color: Optional[int]
+    pants: Optional[PantsType]
+    pants_color: Optional[int]
+    shoes: Optional[ShoesType]
+    shoes_color: Optional[int]
     eyes: EyesType
-    eyes_color: int
+    eyes_color: Optional[int]
     acc: Optional[AccType]
-    acc_color: int
+    acc_color: Optional[int]
     hair: Optional[HairType]
-    hair_color: int
+    hair_color: Optional[int]
 
 
 Direction = Literal[0, 1, 2, 3]
@@ -198,17 +213,24 @@ def get_tiles_for(char_choice: CharacterChoice, tool: ToolType, direction: Direc
         tool_index = tool_last_index - 1
     # Now we know the exact row to use from each sprite sheet
 
+    def _make_sprite(url: str, x: int, y: int) -> Sprite:
+        return Sprite(
+            url=f"{BASE_URL}{url}",
+            x=(x * TILE_SIZE) + PADDINGS[3],
+            y=(y * TILE_SIZE) + PADDINGS[0],
+            width=32 - PADDINGS[1] - PADDINGS[3],
+            height=32 - PADDINGS[0] - PADDINGS[2],
+        )
+
     # From the characters/char_all.png
     # We want sprites at column char_index to char_last_index
     # and rows tool_index to tool_last_index
     for i in range(animation_length):
         ret[i].append(
-            Sprite(
-                url=f"{BASE_URL}characters/char_all.png",
-                x=(char_index * CHAR_WIDTH + i) * TILE_SIZE,
-                y=(tool_index) * TILE_SIZE,
-                width=32,
-                height=32,
+            _make_sprite(
+                "characters/char_all.png",
+                (char_index * CHAR_WIDTH + i),
+                tool_index
             )
         )
         
@@ -219,27 +241,48 @@ def get_tiles_for(char_choice: CharacterChoice, tool: ToolType, direction: Direc
         # we want sprites at column char_choice.clothes_color to char_choice.clothes_color + CHAR_WIDTH
         for i in range(animation_length):
             ret[i].append(
-                Sprite(
-                    url=f"{BASE_URL}clothes/{char_choice.clothes}.png",
-                    x=(char_choice.clothes_color * CHAR_WIDTH + i) * TILE_SIZE,
-                    y=(tool_index) * TILE_SIZE,
-                    width=32,
-                    height=32,
+                _make_sprite(
+                    f"clothes/{char_choice.clothes}.png",
+                    ((char_choice.clothes_color or 0) * CHAR_WIDTH + i),
+                    tool_index
                 )
             )
 
+    if char_choice.pants:
+        # From the pants/{char_choice.pants}.png
+        # we want sprites at column char_choice.pants_color to char_choice.pants_color + CHAR_WIDTH
+        for i in range(animation_length):
+            ret[i].append(
+                _make_sprite(
+                    f"clothes/{char_choice.pants}.png",
+                    ((char_choice.pants_color or 0) * CHAR_WIDTH + i),
+                    tool_index
+                )
+            )
         
+
+    if char_choice.shoes:
+        # From the shoes/{char_choice.shoes}.png
+        # we want sprites at column char_choice.shoes_color to char_choice.shoes_color + CHAR_WIDTH
+        for i in range(animation_length):
+            ret[i].append(
+                _make_sprite(
+                    f"clothes/{char_choice.shoes}.png",
+                    ((char_choice.shoes_color or 0) * CHAR_WIDTH + i),
+                    tool_index
+                )
+            )
+
+
     if char_choice.eyes:
         # From the eyes/{char_choice.eyes}.png
         # we want sprites at column char_choice.eyes_color to char_choice.eyes_color + CHAR_WIDTH
         for i in range(animation_length):
             ret[i].append(
-                Sprite(
-                    url=f"{BASE_URL}eyes/{char_choice.eyes}.png",
-                    x=(char_choice.eyes_color * CHAR_WIDTH + i) * TILE_SIZE,
-                    y=(tool_index) * TILE_SIZE,
-                    width=32,
-                    height=32,
+                _make_sprite(
+                    f"eyes/{char_choice.eyes}.png",
+                    ((char_choice.eyes_color or 0) * CHAR_WIDTH + i),
+                    tool_index
                 )
             )
 
@@ -248,12 +291,10 @@ def get_tiles_for(char_choice: CharacterChoice, tool: ToolType, direction: Direc
         # we want sprites at column char_choice.acc_color to char_choice.acc_color + CHAR_WIDTH
         for i in range(animation_length):
             ret[i].append(
-                Sprite(
-                    url=f"{BASE_URL}acc/{char_choice.acc}.png",
-                    x=(char_choice.acc_color * CHAR_WIDTH + i) * TILE_SIZE,
-                    y=(tool_index) * TILE_SIZE,
-                    width=32,
-                    height=32,
+                _make_sprite(
+                    f"acc/{char_choice.acc}.png",
+                    ((char_choice.acc_color or 0) * CHAR_WIDTH + i),
+                    tool_index
                 )
             )
 
@@ -262,12 +303,10 @@ def get_tiles_for(char_choice: CharacterChoice, tool: ToolType, direction: Direc
         # we want sprites at column char_choice.hair_color to char_choice.hair_color + CHAR_WIDTH
         for i in range(animation_length):
             ret[i].append(
-                Sprite(
-                    url=f"{BASE_URL}hair/{char_choice.hair}.png",
-                    x=(char_choice.hair_color * CHAR_WIDTH + i) * TILE_SIZE,
-                    y=(tool_index) * TILE_SIZE,
-                    width=32,
-                    height=32,
+                _make_sprite(
+                    f"hair/{char_choice.hair}.png",
+                    ((char_choice.hair_color or 0) * CHAR_WIDTH + i),
+                    tool_index
                 )
             )
 

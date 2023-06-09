@@ -39,18 +39,17 @@ def receive_user_input(data):
 def build_full_entity_dump():
     sprites = get_tiles_for(CharacterChoice(
         char_index=0,
-        clothes="dress ",
-        clothes_color=0,
+        clothes="basic",
+        pants="pants",
+        shoes="shoes",
         eyes="eyes",
-        eyes_color=0,
-        acc="glasses",
-        acc_color=0,
-        hair="curly",
-        hair_color=6
-    ), "pickaxe", 2)
+        eyes_color=2,
+        acc=None,
+        hair=None,
+    ), "fish", 3)
     first_entity = Entity(
         id=0,
-        width=80,
+        width=150,
         height=150,
         x=0,
         y=0,
@@ -58,6 +57,7 @@ def build_full_entity_dump():
         y_from=0,
         speed=0,
         animations=[],
+        animation_speed=0,  # 10 ticks per animation
         sprites=sprites,
         sprite_speed=1,
     )

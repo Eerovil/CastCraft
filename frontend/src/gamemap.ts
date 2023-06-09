@@ -57,7 +57,16 @@ class MapDrawer {
         }
         // Draw sprite entity.url at entity.x and entity.y
         // ...
-        const sprites = entity.sprites[this.animationIndex % entity.sprites.length] || [];
+        let animationIndex = this.animationIndex
+        if (entity.animation_speed == 0) {
+            // Only draw the first sprite
+            animationIndex = 0
+        } else {
+            // Draw the sprite at the current animation frame
+            animationIndex = Math.floor(this.animationIndex / entity.animation_speed)
+        }
+        const sprites = entity.sprites[animationIndex % entity.sprites.length] || [];
+
         for (const sprite of sprites) {
             const img = await this.getImg(sprite.url)
             ctx.drawImage(img, sprite.x, sprite.y, sprite.width, sprite.height, entity.x + 100, entity.y + 200, entity.width, entity.height);

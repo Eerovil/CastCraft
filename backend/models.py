@@ -28,5 +28,6 @@ class Entity(BaseModel):
     y_from: int
     speed: int
     animations: List[BasicAnimation]
+    animation_speed: int
     sprites: List[List[Sprite]]
     sprite_speed: int

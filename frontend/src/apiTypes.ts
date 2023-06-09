@@ -18,6 +18,7 @@ export interface Entity {
   y_from: number;
   speed: number;
   animations: BasicAnimation[];
+  animation_speed: number;
   sprites: Sprite[][];
   sprite_speed: number;
 }
