@@ -112,8 +112,8 @@ def update_actions() -> list:
 def init_test_entity_db():
     first_entity = CozyEntity(
         id="0",
-        width=150,
-        height=150,
+        width=32,
+        height=32,
         x=0,
         y=0,
         x_from=0,
@@ -137,8 +137,36 @@ def init_test_entity_db():
     )
     first_entity.update_sprites()
 
+    second_entity = CozyEntity(
+        id="1",
+        width=32,
+        height=32,
+        x=1 * 32,
+        y=1 * 32,
+        x_from=0,
+        y_from=0,
+        speed=0,
+        animations=[],
+        animation_speed=2,  # 10 ticks per animation
+        sprites=[],
+        sprite_speed=1,
+        direction=Directions.down,
+        choice=CharacterChoice(
+            char_index=2,
+            clothes="basic",
+            pants="pants",
+            shoes="shoes",
+            eyes="eyes",
+            eyes_color=3,
+            acc=None,
+            hair=None,
+        )
+    )
+    second_entity.update_sprites()
+
     entity_db = get_entity_db()
     entity_db[first_entity.id] = first_entity
+    entity_db[second_entity.id] = second_entity
 
 
 def handle_player_move(direction):
@@ -151,7 +179,7 @@ def handle_player_move(direction):
     """
     entity_db = get_entity_db()
 
-    player_entity = entity_db[0]
+    player_entity = entity_db["0"]
 
     if player_entity.action is not None:
         logger.info("Player is already doing something")

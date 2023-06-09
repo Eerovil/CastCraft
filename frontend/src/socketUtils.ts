@@ -13,7 +13,7 @@ interface socketUtilsProps {
 
 class socketUtils {
     entities: EntityMap
-    actionCheckTimeout: number | null = null
+    actionCheckTimeout: NodeJS.Timeout | null = null
 
     constructor(props: socketUtilsProps) {
         this.entities = props.entities
@@ -76,7 +76,7 @@ class socketUtils {
     }
 
     waitUntilConnected() {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             socket.on('connect', () => {
                 socket.emit('connected', {
                     'hello': 'world'

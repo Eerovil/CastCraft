@@ -1,5 +1,3 @@
-import { DirectionsType } from "./apiTypes";
-
 interface TouchCallbacks {
     tapNextToPlayer?: (direction: number) => void
 }
