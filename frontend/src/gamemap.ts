@@ -27,7 +27,17 @@ class MapDrawer {
         }
         this.ctx = ctx
         if (isMobile) {
-            this.playerId = "0"  // Testing
+            // Find our player
+            const nickname = (window as any).nickname as string;
+            for (const [id, entity] of Object.entries(this.entities)) {
+                if (entity.nickname === nickname) {
+                    this.playerId = id
+                    break
+                }
+            }
+            if (!this.playerId) {
+                throw new Error('Could not find player')
+            }
             const player = this.entities[this.playerId]
             if (!player) {
                 throw new Error('Could not find player')

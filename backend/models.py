@@ -37,12 +37,13 @@ class Action(BaseModel):
 
 class Entity(BaseModel):
     id: str
+    nickname: str = ''
     width: int
     height: int
     x: int
     y: int
-    x_from: int
-    y_from: int
+    x_from: int = 0
+    y_from: int = 0
     speed: int
     direction: Literal[0, 1, 2, 3]  # Where facing
     animations: List[BasicAnimation]
@@ -53,3 +54,10 @@ class Entity(BaseModel):
 
     def update_sprites(self):
         raise NotImplementedError("TODO")
+
+
+class User(BaseModel):
+    nickname: str
+    entity_id: str  # Entity this player is controlling
+    last_seen: int  # Last time this player was seen
+    request_id: Optional[str]  # Request ID for this player

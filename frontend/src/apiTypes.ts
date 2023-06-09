@@ -23,12 +23,13 @@ export interface DirectionsType {
 }
 export interface Entity {
   id: string;
+  nickname?: string;
   width: number;
   height: number;
   x: number;
   y: number;
-  x_from: number;
-  y_from: number;
+  x_from?: number;
+  y_from?: number;
   speed: number;
   direction: 0 | 1 | 2 | 3;
   animations: BasicAnimation[];
@@ -46,4 +47,10 @@ export interface Sprite {
 }
 export interface TileSize {
   width: 32;
+}
+export interface User {
+  nickname: string;
+  entity_id: string;
+  last_seen: number;
+  request_id?: string;
 }

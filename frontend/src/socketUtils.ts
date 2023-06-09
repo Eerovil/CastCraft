@@ -8,15 +8,18 @@ const URL = undefined;
 export const socket = io(URL);
 
 interface socketUtilsProps {
-    entities: EntityMap
+    entities: EntityMap,
+    nickname: string,
 }
 
 class socketUtils {
     entities: EntityMap
     actionCheckTimeout: NodeJS.Timeout | null = null
+    nickname: string
 
     constructor(props: socketUtilsProps) {
         this.entities = props.entities
+        this.nickname = props.nickname
         socket.on("connect", () => {
             console.log(socket.id); // x8WIv7-mJelg7on_ALbx
         });
@@ -79,7 +82,7 @@ class socketUtils {
         return new Promise((resolve) => {
             socket.on('connect', () => {
                 socket.emit('connected', {
-                    'hello': 'world'
+                    'nickname': this.nickname,
                 }, (data: FullDump) => {
                     console.log("connected: ", data);
                     this.setEntities(data.entities);

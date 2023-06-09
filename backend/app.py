@@ -2,12 +2,13 @@
 # -*- encoding: utf-8 -*-
 
 import re
+import random
 from flask import Flask, render_template, request, redirect
 from flask_socketio import SocketIO, emit
 from sqlitedict import SqliteDict
 from time_utils import get_current_time
 from entity_types.cozy_character import get_tiles_for, CharacterChoice, CozyEntity
-from models import Entity, Directions, TileSize, Action  # noqa
+from models import Entity, Directions, TileSize, Action, User  # noqa
 from typing import List, Optional, Literal  # noqa
 
 TILE_SIZE = TileSize(width=32).width
@@ -30,8 +31,34 @@ def index():
 
 
 @socketio.on('connected')
-def conn(msg):
+def conn(data):
+    logger.info("Connected: %s", data)
     print("Connected")
+    nickname = data.get("nickname")
+    if nickname is None:
+        return
+    user_db = get_user_db()
+    user = user_db.get(nickname)
+    if user is None:
+        user = User(
+            nickname=nickname,
+            entity_id='',
+            last_seen=get_current_time(),
+            request_id=request.sid
+        )
+    user.last_seen = get_current_time()
+    user.request_id = request.sid
+
+    entity_db = get_entity_db()
+    entity = entity_db.get(user.entity_id)
+    if entity is None:
+        entity = generate_player_entity()
+    entity.nickname = nickname
+    entity_db[entity.id] = entity
+    user.entity_id = entity.id
+
+    user_db[nickname] = user
+
     return build_full_entity_dump()
 
 
@@ -62,6 +89,25 @@ def fetch_entity_update():
     }, broadcast=True)
 
 
+def get_user_from_request():
+    user_db = get_user_db()
+    for user in user_db.values():
+        if user.request_id == request.sid:
+            return user
+
+
+def get_player_entity_from_request():
+    user = get_user_from_request()
+    if user is None:
+        return None
+    entity_db = get_entity_db()
+    ret = entity_db.get(user.entity_id)
+    if not ret:
+        logger.warning("No entity found for user %s", user)
+        return None
+    return ret
+
+
 def build_full_entity_dump():
     entity_db = get_entity_db()
     ret = {
@@ -74,6 +120,10 @@ def build_full_entity_dump():
 
 def get_entity_db():
     return SqliteDict('entities.db', tablename="entities", autocommit=True)
+
+
+def get_user_db():
+    return SqliteDict('nicknames.db', tablename="nicknames", autocommit=True)
 
 
 def handle_action_finished(entity: Entity, action: Action, entity_db: SqliteDict):
@@ -109,13 +159,18 @@ def update_actions() -> list:
     return finished_action
 
 
-def init_test_entity_db():
-    first_entity = CozyEntity(
-        id="0",
+def generate_player_entity():
+    _id = 0
+    entity_db = get_entity_db()
+    while str(_id) in entity_db:
+        _id += 1
+    _id = str(_id)
+    player_entity = CozyEntity(
+        id=_id,
         width=64,
         height=64,
-        x=10 * 32,
-        y=10 * 32,
+        x=random.randrange(2, 15) * 32,
+        y=random.randrange(2, 15) * 32,
         x_from=0,
         y_from=0,
         speed=0,
@@ -125,7 +180,7 @@ def init_test_entity_db():
         sprite_speed=1,
         direction=Directions.down,
         choice=CharacterChoice(
-            char_index=0,
+            char_index=random.randrange(0, 8),
             clothes="basic",
             pants="pants",
             shoes="shoes",
@@ -135,38 +190,9 @@ def init_test_entity_db():
             hair=None,
         )
     )
-    first_entity.update_sprites()
-
-    second_entity = CozyEntity(
-        id="1",
-        width=64,
-        height=64,
-        x=11 * 32,
-        y=11 * 32,
-        x_from=0,
-        y_from=0,
-        speed=0,
-        animations=[],
-        animation_speed=2,  # 10 ticks per animation
-        sprites=[],
-        sprite_speed=1,
-        direction=Directions.down,
-        choice=CharacterChoice(
-            char_index=2,
-            clothes="basic",
-            pants="pants",
-            shoes="shoes",
-            eyes="eyes",
-            eyes_color=3,
-            acc=None,
-            hair=None,
-        )
-    )
-    second_entity.update_sprites()
-
-    entity_db = get_entity_db()
-    entity_db[first_entity.id] = first_entity
-    entity_db[second_entity.id] = second_entity
+    player_entity.update_sprites()
+    entity_db[_id] = player_entity
+    return player_entity
 
 
 def handle_player_move(direction):
@@ -177,9 +203,8 @@ def handle_player_move(direction):
 
     return a list of entities that were affected
     """
+    player_entity = get_player_entity_from_request()
     entity_db = get_entity_db()
-
-    player_entity = entity_db["0"]
 
     if player_entity.action is not None:
         logger.info("Player is already doing something")
@@ -214,5 +239,4 @@ def handle_player_move(direction):
 
 
 if __name__ == '__main__':
-    init_test_entity_db()
     socketio.run(app, debug=True, host="0.0.0.0", port=5174)
