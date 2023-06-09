@@ -25,6 +25,9 @@ app.config['SECRET_KEY'] = 'eero'
 socketio = SocketIO(app)
 
 
+MAP_BOUNDS = (0, 0, 60 * 32, 33 * 32)
+
+
 @app.route('/')
 def index():
     return redirect('/index.html')
@@ -203,6 +206,34 @@ def get_entity_at_position(x, y):
     return None
 
 
+def fix_player_if_out_of_bounds(entity: Entity):
+    if entity.x < MAP_BOUNDS[0]:
+        entity.x = MAP_BOUNDS[0]
+    if entity.x > MAP_BOUNDS[2]:
+        entity.x = MAP_BOUNDS[2]
+    if entity.y < MAP_BOUNDS[1]:
+        entity.y = MAP_BOUNDS[1]
+    if entity.y > MAP_BOUNDS[3]:
+        entity.y = MAP_BOUNDS[3]
+
+
+def get_moving_allowed_to(x, y, entity: Entity):
+    if x < MAP_BOUNDS[0]:
+        return False
+    if x > MAP_BOUNDS[2]:
+        return False
+    if y < MAP_BOUNDS[1]:
+        return False
+    if y > MAP_BOUNDS[3]:
+        return False
+    
+    blocking_entity = get_entity_at_position(x, y)
+    if blocking_entity is not None and blocking_entity.id != entity.id:
+        return False
+    
+    return True
+
+
 def handle_player_move(direction):
     """
     Find user ID from data  TODO
@@ -238,16 +269,16 @@ def handle_player_move(direction):
         target_x += TILE_SIZE
         player_entity.direction = Directions.right
 
-    blocking_entity = get_entity_at_position(target_x, target_y)
-    if blocking_entity is not None and blocking_entity.id != player_entity.id:
-        logger.info(f"Player {blocking_entity.nickname} is blocked by {blocking_entity.nickname}")
+    if get_moving_allowed_to(target_x, target_y, player_entity) is False:
+        logger.info(f"Player can't move to {target_x}, {target_y}")
+        fix_player_if_out_of_bounds(player_entity)
     else:
         player_entity.x = target_x
         player_entity.y = target_y
         player_entity.action = Action(
             action='move',
-            time=2000,
-            timeout=get_current_time() + 2000
+            time=1000,
+            timeout=get_current_time() + 1000
         )
     player_entity.update_sprites()
 
