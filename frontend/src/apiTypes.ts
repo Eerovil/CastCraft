@@ -7,8 +7,9 @@
 
 export interface Action {
   timeout: number;
+  time: number;
   action: "move" | "attack";
-  target_id: number;
+  target_id?: number;
 }
 export interface BaseModel {}
 export interface BasicAnimation {

@@ -13,6 +13,7 @@ interface socketUtilsProps {
 
 class socketUtils {
     entities: EntityMap
+    actionCheckTimeout: number | null = null
 
     constructor(props: socketUtilsProps) {
         this.entities = props.entities
@@ -47,7 +48,10 @@ class socketUtils {
         if (timeUntilNextAction <= 0) {
             this.fetchEntityUpdate();
         } else {
-            setTimeout(() => {
+            if (this.actionCheckTimeout !== null) {
+                clearTimeout(this.actionCheckTimeout);
+            }
+            this.actionCheckTimeout = setTimeout(() => {
                 this.fetchEntityUpdate();
             }, timeUntilNextAction);
         }

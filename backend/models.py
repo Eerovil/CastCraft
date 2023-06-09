@@ -29,7 +29,8 @@ class Sprite(BaseModel):
 
 
 class Action(BaseModel):
-    timeout: int
+    timeout: int  # When it will finish
+    time: int  # How long it takes from start to finish (ms)
     action: Literal["move", "attack"]
     target_id: Optional[int]
 

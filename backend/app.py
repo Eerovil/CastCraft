@@ -86,7 +86,7 @@ def handle_action_finished(entity: Entity, action: Action, entity_db: SqliteDict
 
 
 
-def update_actions():
+def update_actions() -> list:
     """
     Handle actions in progress, and remove them if they are done
     """
@@ -101,7 +101,7 @@ def update_actions():
             continue
     
     if len(finished_action) == 0:
-        return
+        return []
 
     for entity in finished_action:
         handle_action_finished(entity, entity.action, entity_db)
@@ -120,7 +120,7 @@ def init_test_entity_db():
         y_from=0,
         speed=0,
         animations=[],
-        animation_speed=5,  # 10 ticks per animation
+        animation_speed=2,  # 10 ticks per animation
         sprites=[],
         sprite_speed=1,
         direction=Directions.down,
@@ -158,6 +158,7 @@ def handle_player_move(direction):
         return [], []
 
     player_entity.x_from = player_entity.x
+    player_entity.y_from = player_entity.y
     logger.info(f"Player started moving from {player_entity.x} to direction {direction}")
     if direction == Directions.up:
         player_entity.y -= TILE_SIZE
@@ -174,6 +175,7 @@ def handle_player_move(direction):
 
     player_entity.action = Action(
         action='move',
+        time=2000,
         timeout=get_current_time() + 2000
     )
     player_entity.update_sprites()

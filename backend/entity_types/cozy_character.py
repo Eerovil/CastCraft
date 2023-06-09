@@ -338,7 +338,7 @@ class CozyEntity(Entity):
         if self.action:
             if self.action.action == 'move':
                 tool = "walk"
-                self.animation_speed = 4
+                self.animation_speed = 2
 
         sprites = get_tiles_for(self.choice, tool=tool, direction=self.direction)
         self.sprites = sprites
