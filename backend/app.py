@@ -195,6 +195,14 @@ def generate_player_entity():
     return player_entity
 
 
+def get_entity_at_position(x, y):
+    entity_db = get_entity_db()
+    for entity in entity_db.values():
+        if entity.x == x and entity.y == y:
+            return entity
+    return None
+
+
 def handle_player_move(direction):
     """
     Find user ID from data  TODO
@@ -213,24 +221,34 @@ def handle_player_move(direction):
     player_entity.x_from = player_entity.x
     player_entity.y_from = player_entity.y
     logger.info(f"Player started moving from {player_entity.x} to direction {direction}")
+
+    target_x = player_entity.x
+    target_y = player_entity.y
+
     if direction == Directions.up:
-        player_entity.y -= TILE_SIZE
+        target_y -= TILE_SIZE
         player_entity.direction = Directions.up
     elif direction == Directions.down:
-        player_entity.y += TILE_SIZE
+        target_y += TILE_SIZE
         player_entity.direction = Directions.down
     elif direction == Directions.left:
-        player_entity.x -= TILE_SIZE
+        target_x -= TILE_SIZE
         player_entity.direction = Directions.left
     elif direction == Directions.right:
-        player_entity.x += TILE_SIZE
+        target_x += TILE_SIZE
         player_entity.direction = Directions.right
 
-    player_entity.action = Action(
-        action='move',
-        time=2000,
-        timeout=get_current_time() + 2000
-    )
+    blocking_entity = get_entity_at_position(target_x, target_y)
+    if blocking_entity is not None and blocking_entity.id != player_entity.id:
+        logger.info(f"Player {blocking_entity.nickname} is blocked by {blocking_entity.nickname}")
+    else:
+        player_entity.x = target_x
+        player_entity.y = target_y
+        player_entity.action = Action(
+            action='move',
+            time=2000,
+            timeout=get_current_time() + 2000
+        )
     player_entity.update_sprites()
 
     entity_db[player_entity.id] = player_entity

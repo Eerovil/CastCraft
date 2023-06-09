@@ -61,7 +61,17 @@ class MapDrawer {
         ctx.clearRect(-canvas.width, -canvas.height, canvas.width * 2, canvas.height * 2)
         const promises: Promise<void>[] = []
         this.drawGrid(ctx)
-        for (const entity of Object.values(this.entities)) {
+        const sortedEntities = Object.values(this.entities).sort((a, b) => {
+            // Smaller y is drawn first
+            if (a.y < b.y) {
+                return -1
+            }
+            if (a.y > b.y) {
+                return 1
+            }
+            return 0;
+        })
+        for (const entity of sortedEntities) {
             promises.push(this.drawEntity(ctx, entity))
         }
         Promise.all(promises).then(() => {

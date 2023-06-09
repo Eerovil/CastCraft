@@ -45,6 +45,9 @@ class socketUtils {
             }
         }
         if (lowestTimeout === Infinity) {
+            if (this.actionCheckTimeout !== null) {
+                clearTimeout(this.actionCheckTimeout);
+            }
             return;
         }
         const timeUntilNextAction = lowestTimeout - currentTime;
