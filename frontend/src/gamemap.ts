@@ -12,6 +12,7 @@ class MapDrawer {
         this.entities = globalEntityMap
         this.canvas = canvas
         this.preloadedImages = {}
+        console.log('MapDrawer constructor: ', this.entities)
     }
 
 

@@ -4,7 +4,7 @@
 
 from pydantic import BaseModel
 from typing import List, Optional, Literal  # noqa
-from models import Sprite
+from models import Sprite, Entity
 
 
 BASE_URL = '/sprites/cozy_people/'
@@ -327,3 +327,18 @@ def test_this() -> list[List[Sprite]]:
         hair_color=0
     )
     return get_tiles_for(choice, "axe", 0)
+
+
+class CozyEntity(Entity):
+    choice: CharacterChoice
+
+    def update_sprites(self):
+        tool = "walk"  # If we don't have an action, we're walking with 0 speed
+        self.animation_speed = 0
+        if self.action:
+            if self.action.action == 'move':
+                tool = "walk"
+                self.animation_speed = 4
+
+        sprites = get_tiles_for(self.choice, tool=tool, direction=self.direction)
+        self.sprites = sprites

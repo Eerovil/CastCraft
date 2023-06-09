@@ -7,3 +7,8 @@ export interface EntityMap {
 export interface FullDump {
     entities: EntityMap
 }
+
+export interface PartialDump {
+    changedEntities: EntityMap
+    deletedEntityIds: number[]
+}

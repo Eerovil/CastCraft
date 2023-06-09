@@ -5,11 +5,23 @@
 /* Do not modify it by hand - just update the pydantic models and then re-run the script
 */
 
+export interface Action {
+  timeout: number;
+  action: "move" | "attack";
+  target_id: number;
+}
+export interface BaseModel {}
 export interface BasicAnimation {
   type: "shake" | "rotate";
 }
+export interface DirectionsType {
+  down: 0;
+  up: 1;
+  right: 2;
+  left: 3;
+}
 export interface Entity {
-  id: number;
+  id: string;
   width: number;
   height: number;
   x: number;
@@ -17,10 +29,12 @@ export interface Entity {
   x_from: number;
   y_from: number;
   speed: number;
+  direction: 0 | 1 | 2 | 3;
   animations: BasicAnimation[];
   animation_speed: number;
   sprites: Sprite[][];
   sprite_speed: number;
+  action?: Action;
 }
 export interface Sprite {
   url: string;
