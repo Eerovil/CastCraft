@@ -44,8 +44,13 @@ class Action(BaseModel):
     target_id: Optional[int]
 
 
+ENTITY_MADE_OF = Literal["flesh", "wood", "stone", "iron", "gold", "diamond"]
+
+
 class Entity(BaseModel):
     id: str
+
+    made_of: ENTITY_MADE_OF = "flesh"
     nickname: str = ''
     width: int = 64
     height: int = 64
@@ -84,3 +89,6 @@ class User(BaseModel):
 class Item(BaseModel):
     id: str
     slug: Literal[ITEM_SLUGS]
+    woodcutting: Optional[int] = None
+    mining: Optional[int] = None
+    watering: Optional[int] = None

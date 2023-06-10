@@ -3,7 +3,7 @@ import random
 
 from db import get_entity_db, get_user_db
 from entity_types.cozy_character import CharacterChoice, CozyEntity
-from models import Directions, User
+from models import Directions, Item, User
 from time_utils import get_current_time
 logger = logging.getLogger(__name__)
 
@@ -55,6 +55,10 @@ def generate_player_entity():
             eyes_color=2,
             acc=None,
             hair=None,
+        ),
+        holding=Item(
+            id="0",
+            slug="axe"
         )
     )
     player_entity.update_sprites()
@@ -78,6 +82,8 @@ def handle_user_connected(request_sid, nickname):
     entity_db = get_entity_db()
     entity = entity_db.get(user.entity_id)
     if entity is None:
+        entity = generate_player_entity()
+    if entity.nickname != nickname:
         entity = generate_player_entity()
     elif not isinstance(entity, CozyEntity):
         entity = generate_player_entity()

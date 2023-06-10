@@ -106,8 +106,9 @@ def handle_player_touch(request, direction):
         elif action == "swing":
             player_entity.action = Action(
                 action='swing',
-                time=10000,
-                timeout=get_current_time() + 10000
+                time=1000,
+                timeout=get_current_time() + 1000,
+                target_id=blocking_entity.id
             )
 
     player_entity.update_sprites()
@@ -117,10 +118,18 @@ def handle_player_touch(request, direction):
     return [], [player_entity]
 
 
-def handle_action_finished(entity: Entity, action: Action, entity_db: SqliteDict):
+def handle_action_finished(entity: Entity, action: Action, entity_db: SqliteDict) -> tuple[list[Entity], list[str]]:
+    changed_entities = []
+    deleted_entity_ids = []
     if action.action == 'move':
         entity.x_from = entity.x
         entity.y_from = entity.y
+        entity.action = None
+        entity.update_sprites()
+        entity_db[entity.id] = entity
+    elif action.action == 'swing':
+        del entity_db[action.target_id]
+        deleted_entity_ids.append(action.target_id)
         entity.action = None
         entity.update_sprites()
         entity_db[entity.id] = entity
@@ -128,28 +137,32 @@ def handle_action_finished(entity: Entity, action: Action, entity_db: SqliteDict
         entity.action = None
         entity.update_sprites()
         entity_db[entity.id] = entity
+    return changed_entities, deleted_entity_ids
 
 
-def update_actions() -> list:
+def update_actions() -> tuple[list[Entity], list[str]]:
     """
     Handle actions in progress, and remove them if they are done
     """
     entity_db = get_entity_db()
-    finished_action = []
+    changed_entities = []
+    deleted_entity_ids = []
     now = get_current_time()
     for entity_id, entity in entity_db.items():
         if entity.action is None:
             continue
         if entity.action.timeout < now:
-            finished_action.append(entity)
+            changed_entities.append(entity)
             continue
     
-    if len(finished_action) == 0:
+    if len(changed_entities) == 0:
         return []
 
-    for entity in finished_action:
-        handle_action_finished(entity, entity.action, entity_db)
+    for entity in changed_entities:
+        handle_result = (
+            handle_action_finished(entity, entity.action, entity_db)
+        )
+        changed_entities.extend(handle_result[0])
+        deleted_entity_ids.extend(handle_result[1])
 
-    return finished_action
-
-
+    return changed_entities, deleted_entity_ids

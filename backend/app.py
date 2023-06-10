@@ -64,11 +64,11 @@ def receive_move_player(data):
 
 @socketio.on('fetch_entity_update')
 def fetch_entity_update():
-    changed_entities = update_actions()
+    changed_entities, deleted_entity_ids = update_actions()
     if len(changed_entities) == 0:
         return
     emit('entity_update', {
-        'deletedEntityIds': [],
+        'deletedEntityIds': deleted_entity_ids,
         'changedEntities': {
             entity.id: entity.dict() for entity in changed_entities
         }
