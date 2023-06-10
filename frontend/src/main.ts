@@ -4,7 +4,7 @@ import { initNetwork } from './socketUtils.ts'
 import { EntityMap } from './moreTypes'
 import { startTouchInput } from './touchInput'
 import { initializeInventory } from './inventory.ts'
-import { Entity } from './apiTypes.ts'
+import { Item } from './apiTypes.ts'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
@@ -74,7 +74,14 @@ async function main() {
   }
   startTouchInput(touchElement, touchCallbacks)
   if (playerId) {
-    initializeInventory(document.querySelector<HTMLDivElement>('#inventory')!, globalEntityMap, playerId)
+    const inventoryCallbacks = {
+      selectItem: (item: Item) => {
+        console.log('selectItemCallback', item)
+        socketHandler.selectItem(item)
+      }
+    }
+    const inventoryEl = document.querySelector<HTMLDivElement>('#inventory')!
+    initializeInventory(inventoryEl, globalEntityMap, playerId, inventoryCallbacks)
   }
 }
 

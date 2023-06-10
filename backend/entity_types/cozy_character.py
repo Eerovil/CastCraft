@@ -336,7 +336,6 @@ ITEM_SLUG_TO_TOOL = {
 
 class CozyEntity(Entity):
     choice: CharacterChoice
-    holding: Optional[Item]
 
     def get_swing_tool(self):
         tool = "pickup"
@@ -358,13 +357,13 @@ class CozyEntity(Entity):
                 tool = "walk"
                 self.animation_speed = 2
             elif self.action.action == 'swing':
-                tool = self.get_swing_tool()
+                tool = self.get_swing_tool() or 'pickup'
                 self.animation_speed = 2
             elif self.action.action == 'to_inventory':
                 tool = "pickup"
                 self.animation_speed = 2
         else:
-            tool = self.get_idle_tool()
+            tool = self.get_idle_tool() or "walk"
 
         sprites = get_tiles_for(self.choice, tool=tool, direction=self.direction)
         self.sprites = sprites

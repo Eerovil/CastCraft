@@ -41,6 +41,7 @@ export interface Entity {
   animation_speed?: number;
   sprites?: Sprite[][];
   action?: Action;
+  holding?: Item;
   on_touch?: "move" | "swing" | "to_inventory" | "pick_up";
   inventory?: Inventory;
 }
@@ -51,10 +52,6 @@ export interface Sprite {
   width: number;
   height: number;
 }
-export interface Inventory {
-  items?: Item[];
-  slots?: number;
-}
 export interface Item {
   quantity?: number;
   slug: "axe" | "pickaxe" | "wood_block" | "stone_block";
@@ -62,6 +59,10 @@ export interface Item {
   woodcutting?: number;
   mining?: number;
   watering?: number;
+}
+export interface Inventory {
+  items?: Item[];
+  slots?: number;
 }
 export interface TileSize {
   width: 32;

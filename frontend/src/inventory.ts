@@ -1,15 +1,23 @@
+import { Item } from "./apiTypes"
 import { getImg } from "./imgUtils"
 import { EntityMap } from "./moreTypes"
+
+interface InventoryCallbacks {
+    selectItem?: (item: Item) => void
+}
 
 class Inventory {
     playerId: string
     element: HTMLDivElement
     globalEntityMap: EntityMap
+    callbacks: InventoryCallbacks
 
-    constructor(element: HTMLDivElement, globalEntityMap: EntityMap, playerId: string) {
+    constructor(element: HTMLDivElement, globalEntityMap: EntityMap, playerId: string, callbacks: InventoryCallbacks) {
         this.playerId = playerId
         this.element = element
         this.globalEntityMap = globalEntityMap
+        this.callbacks = callbacks
+
         setInterval(() => {this.updateInventory()}, 1000)
     }
 
@@ -27,6 +35,8 @@ class Inventory {
             return;
         }
         const inventory = playerEntity.inventory;
+        const holdingSlug = playerEntity.holding ? playerEntity.holding.slug : null;
+
         if (!inventory || !inventory.items) {
             return;
         }
@@ -57,13 +67,25 @@ class Inventory {
                 ctx.font = '20px Arial'
                 ctx.fillText(item.quantity.toString(), 40, 40)
             }
+            if (item.slug == holdingSlug) {
+                // Draw square around item
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 5;
+                ctx.strokeRect(0, 0, 50, 50);
+            }
 
             slot.appendChild(canvas);
+
+            if (this.callbacks.selectItem) {
+                slot.addEventListener('click', () => {
+                    this.callbacks.selectItem!(item);
+                });
+            }
         }
     }
 }
 
-export function initializeInventory(element: HTMLDivElement, globalEntityMap: EntityMap, playerId: string): Inventory {
-    const inventory = new Inventory(element, globalEntityMap, playerId);
+export function initializeInventory(element: HTMLDivElement, globalEntityMap: EntityMap, playerId: string, callbacks: InventoryCallbacks): Inventory {
+    const inventory = new Inventory(element, globalEntityMap, playerId, callbacks);
     return inventory;
 }

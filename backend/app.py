@@ -8,6 +8,7 @@ from actions import update_actions, handle_player_touch
 from db import get_entity_db
 from user_utils import handle_user_connected
 from nature_utils import spawn_nature_things
+from inventory import select_item
 from typing import List, Optional, Literal  # noqa
 
 
@@ -63,6 +64,27 @@ def receive_move_player(data):
     direction: Literal[0, 1, 2, 3] = data["direction"]
     logger.info(f"Received move player: {direction}")
     deleted_entity_ids, changed_entities = handle_player_touch(request.sid, direction)
+    if len(deleted_entity_ids) == 0 and len(changed_entities) == 0:
+        return
+    emit('entity_update', {
+        'deletedEntityIds': deleted_entity_ids,
+        'changedEntities': {
+            entity.id: entity.dict() for entity in changed_entities
+        }
+    }, broadcast=True)
+
+
+@socketio.on('selectItem')
+def receive_select_item(data):
+    """
+    User tapped to move or touched soething that is next to them
+    """
+    if data.get("item") is None:
+        return
+
+    logger.info(f"Received select item: {data['item']}")
+    item = data['item']
+    deleted_entity_ids, changed_entities = select_item(request.sid, item['slug'])
     if len(deleted_entity_ids) == 0 and len(changed_entities) == 0:
         return
     emit('entity_update', {

@@ -1,6 +1,7 @@
 import { io } from "socket.io-client";
 import { EntityMap, FullDump, PartialDump } from "./moreTypes";
 import { getCurrentTime } from "./timeUtils";
+import { Item } from "./apiTypes";
 
 // "undefined" means the URL will be computed from the `window.location` object
 const URL = undefined;
@@ -108,6 +109,15 @@ class socketUtils {
             direction: direction
         }, (data: PartialDump) => {
             console.log("movePlayer: ", data);
+        });
+    }
+
+    selectItem(item: Item) {
+        // User selects an item to holding
+        socket.emit('selectItem', {
+            item: item
+        }, (data: PartialDump) => {
+            console.log("selectItem: ", data);
         });
     }
 }

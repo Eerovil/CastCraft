@@ -114,7 +114,7 @@ def handle_player_touch(request, direction):
             if player_entity.holding:
                 efficiency = (
                     player_entity.holding.get_material_swinging_efficiency(blocking_entity.made_of)
-                )
+                ) or 1
             logger.info(f"Player started swinging at {blocking_entity.id} with efficiency {efficiency}")
             final_time = base_time / efficiency
             player_entity.action = Action(

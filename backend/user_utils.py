@@ -95,7 +95,9 @@ def generate_player_entity():
                     mining=1,
                 ),
                 MinecraftItem(
-                    slug="wood_block",
+                    slug="pickaxe",
+                    woodcutting=1,
+                    mining=10,
                 ),
             ]
         )

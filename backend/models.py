@@ -98,6 +98,8 @@ class Entity(BaseModel):
     sprites: List[List[Sprite]] = []
     action: Optional[Action]
 
+    holding: Optional[Item] = None
+
     # What happens when user tries to walk into this entity
     on_touch: Optional[ACTION_SLUGS] = None
 
