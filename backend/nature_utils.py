@@ -20,6 +20,7 @@ def generate_tree_entity():
         x=x,
         y=y,
         treeIndex=random.randrange(0, 6),
+        on_touch='swing',
     )
     tree_entity.update_sprites()
     entity_db = get_entity_db()
@@ -42,6 +43,7 @@ def generate_rock_entity():
         x=x,
         y=y,
         rockIndex=random.randrange(0, 9),
+        on_touch='swing',
     )
     rock_entity.update_sprites()
     entity_db = get_entity_db()

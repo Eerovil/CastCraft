@@ -4,9 +4,8 @@
 from flask import Flask, request, redirect
 from flask_socketio import SocketIO, emit
 from sqlitedict import SqliteDict
-from actions import update_actions
+from actions import update_actions, handle_player_touch
 from db import get_entity_db
-from movement import handle_player_move
 from user_utils import handle_user_connected
 from nature_utils import spawn_nature_things
 from typing import List, Optional, Literal  # noqa
@@ -44,12 +43,15 @@ def conn(data):
 
 @socketio.on('movePlayer')
 def receive_move_player(data):
+    """
+    User tapped to move or touched soething that is next to them
+    """
     if data.get("direction") is None:
         return
 
     direction: Literal[0, 1, 2, 3] = data["direction"]
     logger.info(f"Received move player: {direction}")
-    deleted_entity_ids, changed_entities = handle_player_move(request.sid, direction)
+    deleted_entity_ids, changed_entities = handle_player_touch(request.sid, direction)
     if len(deleted_entity_ids) == 0 and len(changed_entities) == 0:
         return
     emit('entity_update', {

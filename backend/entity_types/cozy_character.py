@@ -4,7 +4,7 @@
 
 from pydantic import BaseModel
 from typing import List, Optional, Literal  # noqa
-from models import Sprite, Entity
+from models import Sprite, Entity, Item
 
 
 BASE_URL = '/sprites/cozy_people/'
@@ -329,8 +329,27 @@ def test_this() -> list[List[Sprite]]:
     return get_tiles_for(choice, "axe", 0)
 
 
+ITEM_SLUG_TO_TOOL = {
+    "axe": "axe",
+    "pickaxe": "pickaxe",
+}
+
+
 class CozyEntity(Entity):
     choice: CharacterChoice
+    holding: Optional[Item]
+
+    def get_swing_tool(self):
+        tool = "pickup"
+        if self.holding:
+            tool = ITEM_SLUG_TO_TOOL.get(self.holding.slug)
+        return tool
+
+    def get_idle_tool(self):
+        tool = "walk"
+        if self.holding:
+            tool = ITEM_SLUG_TO_TOOL.get(self.holding.slug)
+        return tool
 
     def update_sprites(self):
         tool = "walk"  # If we don't have an action, we're walking with 0 speed
@@ -339,6 +358,11 @@ class CozyEntity(Entity):
             if self.action.action == 'move':
                 tool = "walk"
                 self.animation_speed = 2
+            elif self.action.action == 'swing':
+                tool = self.get_swing_tool()
+                self.animation_speed = 2
+        else:
+            tool = self.get_idle_tool()
 
         sprites = get_tiles_for(self.choice, tool=tool, direction=self.direction)
         self.sprites = sprites

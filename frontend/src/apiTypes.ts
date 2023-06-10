@@ -8,7 +8,7 @@
 export interface Action {
   timeout: number;
   time: number;
-  action: "move" | "attack";
+  action: "move" | "swing";
   target_id?: number;
 }
 export interface BaseModel {}
@@ -32,12 +32,15 @@ export interface Entity {
   y_from?: number;
   x_offset?: number;
   y_offset?: number;
+  x_bound?: number;
+  y_bound?: number;
   speed?: number;
   direction?: 0 | 1 | 2 | 3;
   animations?: BasicAnimation[];
   animation_speed?: number;
   sprites?: Sprite[][];
   action?: Action;
+  on_touch?: "move" | "swing";
 }
 export interface Sprite {
   url: string;
@@ -45,6 +48,10 @@ export interface Sprite {
   y: number;
   width: number;
   height: number;
+}
+export interface Item {
+  id: string;
+  slug: "axe" | "pickaxe" | "wood_block" | "stone_block";
 }
 export interface TileSize {
   width: 32;
