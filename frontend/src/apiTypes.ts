@@ -24,18 +24,19 @@ export interface DirectionsType {
 export interface Entity {
   id: string;
   nickname?: string;
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
   x: number;
   y: number;
   x_from?: number;
   y_from?: number;
-  speed: number;
-  direction: 0 | 1 | 2 | 3;
-  animations: BasicAnimation[];
-  animation_speed: number;
-  sprites: Sprite[][];
-  sprite_speed: number;
+  x_offset?: number;
+  y_offset?: number;
+  speed?: number;
+  direction?: 0 | 1 | 2 | 3;
+  animations?: BasicAnimation[];
+  animation_speed?: number;
+  sprites?: Sprite[][];
   action?: Action;
 }
 export interface Sprite {

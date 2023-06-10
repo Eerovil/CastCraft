@@ -45,7 +45,6 @@ def generate_player_entity():
         animations=[],
         animation_speed=2,  # 10 ticks per animation
         sprites=[],
-        sprite_speed=1,
         direction=Directions.down,
         choice=CharacterChoice(
             char_index=random.randrange(0, 8),
@@ -79,6 +78,8 @@ def handle_user_connected(request_sid, nickname):
     entity_db = get_entity_db()
     entity = entity_db.get(user.entity_id)
     if entity is None:
+        entity = generate_player_entity()
+    elif not isinstance(entity, CozyEntity):
         entity = generate_player_entity()
     entity.nickname = nickname
     entity_db[entity.id] = entity

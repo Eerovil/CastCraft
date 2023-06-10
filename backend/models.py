@@ -38,18 +38,19 @@ class Action(BaseModel):
 class Entity(BaseModel):
     id: str
     nickname: str = ''
-    width: int
-    height: int
+    width: int = 64
+    height: int = 64
     x: int
     y: int
     x_from: int = 0
     y_from: int = 0
-    speed: int
-    direction: Literal[0, 1, 2, 3]  # Where facing
-    animations: List[BasicAnimation]
-    animation_speed: int
-    sprites: List[List[Sprite]]
-    sprite_speed: int
+    x_offset: int = -32 / 2
+    y_offset: int = -34
+    speed: int = 0
+    direction: Literal[0, 1, 2, 3] = 0  # Where facing
+    animations: List[BasicAnimation] = []
+    animation_speed: int = 0
+    sprites: List[List[Sprite]] = []
     action: Optional[Action]
 
     def update_sprites(self):

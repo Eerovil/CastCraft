@@ -188,7 +188,7 @@ class MapDrawer {
             ctx.drawImage(
                 img,
                 sprite.x, sprite.y, sprite.width, sprite.height,
-                x - (32 / 2), y - 32 - 2, entity.width, entity.height
+                x + entity.x_offset, y + entity.y_offset, entity.width, entity.height
             );
             // Draw a dot at the x/y of the entity
             ctx.fillStyle = 'red'

@@ -8,6 +8,7 @@ from actions import update_actions
 from db import get_entity_db
 from movement import handle_player_move
 from user_utils import handle_user_connected
+from nature_utils import spawn_nature_things
 from typing import List, Optional, Literal  # noqa
 
 
@@ -17,7 +18,6 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__, static_url_path='/', static_folder='../static/')
-SqliteDict('entities.db', tablename="entities", autocommit=True)
 
 app.config['SECRET_KEY'] = 'eero'
 socketio = SocketIO(app)
@@ -50,6 +50,8 @@ def receive_move_player(data):
     direction: Literal[0, 1, 2, 3] = data["direction"]
     logger.info(f"Received move player: {direction}")
     deleted_entity_ids, changed_entities = handle_player_move(request.sid, direction)
+    if len(deleted_entity_ids) == 0 and len(changed_entities) == 0:
+        return
     emit('entity_update', {
         'deletedEntityIds': deleted_entity_ids,
         'changedEntities': {
@@ -61,6 +63,8 @@ def receive_move_player(data):
 @socketio.on('fetch_entity_update')
 def fetch_entity_update():
     changed_entities = update_actions()
+    if len(changed_entities) == 0:
+        return
     emit('entity_update', {
         'deletedEntityIds': [],
         'changedEntities': {
@@ -75,10 +79,16 @@ def build_full_entity_dump():
         "entities": {}
     }
     for entity_id, entity in entity_db.items():
+        entity.update_sprites()
+        entity_db[entity_id] = entity
         ret["entities"][entity_id] = entity.dict()
     return ret
 
 
 
 if __name__ == '__main__':
+    SqliteDict('entities.db', tablename="entities", autocommit=True)
+    entities = get_entity_db()
+    entities.clear()
+    spawn_nature_things()
     socketio.run(app, debug=True, host="0.0.0.0", port=5174)
