@@ -1,5 +1,6 @@
 
 
+from db import get_free_entity_id, get_entity_db
 from models import Entity, Sprite
 
 
@@ -31,6 +32,20 @@ class TreeEntity(Entity):
         ]
         self.sprites = sprites
 
+    def on_swing_destroy(self):
+        # Create a MinecraftBlock entity
+        from entity_types.minecraft_things import DroppedMinecraftBlock
+        block = DroppedMinecraftBlock(
+            id=get_free_entity_id(),
+            block_type='wood',
+            x=self.x,
+            y=self.y,
+        )
+        block.update_sprites()
+        entity_db = get_entity_db()
+        entity_db[block.id] = block
+        return [block]
+
 
 ROCK_TILE = (16, 16)
 
@@ -58,3 +73,17 @@ class RockEntity(Entity):
             ]
         ]
         self.sprites = sprites
+
+    def on_swing_destroy(self):
+        # Create a MinecraftBlock entity
+        from entity_types.minecraft_things import DroppedMinecraftBlock
+        block = DroppedMinecraftBlock(
+            id=get_free_entity_id(),
+            block_type='stone',
+            x=self.x,
+            y=self.y,
+        )
+        block.update_sprites()
+        entity_db = get_entity_db()
+        entity_db[block.id] = block
+        return [block]

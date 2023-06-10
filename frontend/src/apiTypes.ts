@@ -8,8 +8,8 @@
 export interface Action {
   timeout: number;
   time: number;
-  action: "move" | "swing";
-  target_id?: number;
+  action: "move" | "swing" | "to_inventory" | "pick_up";
+  target_id?: string;
 }
 export interface BaseModel {}
 export interface BasicAnimation {
@@ -23,6 +23,7 @@ export interface DirectionsType {
 }
 export interface Entity {
   id: string;
+  made_of?: "flesh" | "wood" | "stone" | "iron" | "gold" | "diamond";
   nickname?: string;
   width?: number;
   height?: number;
@@ -40,7 +41,8 @@ export interface Entity {
   animation_speed?: number;
   sprites?: Sprite[][];
   action?: Action;
-  on_touch?: "move" | "swing";
+  on_touch?: "move" | "swing" | "to_inventory" | "pick_up";
+  inventory?: Inventory;
 }
 export interface Sprite {
   url: string;
@@ -49,9 +51,17 @@ export interface Sprite {
   width: number;
   height: number;
 }
+export interface Inventory {
+  items?: Item[];
+  slots?: number;
+}
 export interface Item {
-  id: string;
+  quantity?: number;
   slug: "axe" | "pickaxe" | "wood_block" | "stone_block";
+  sprite?: Sprite;
+  woodcutting?: number;
+  mining?: number;
+  watering?: number;
 }
 export interface TileSize {
   width: 32;

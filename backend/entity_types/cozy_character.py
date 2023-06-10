@@ -131,12 +131,12 @@ ACC_CHOICES["mask_clown_blue"] = 1
 ACC_CHOICES["mask_clown_red"] = 1
 
 HairType = Literal[
-    "bob", "braids", "buzzcut", "curly", "emo", "extra_long", "extra_long_skirt",
-    "french_curl", "gentleman", "long_straight", "long_straight_skirt", "midiwave",
-    "ponytail", "spacebuns", "wavy"
+    "bob ", "braids", "buzzcut", "curly", "emo", "extra_long", "extra_long_skirt",
+    "french_curl", "gentleman", "long_straight ", "long_straight_skirt", "midiwave",
+    "ponytail ", "spacebuns", "wavy"
 ]
 HAIR_CHOICES: dict[HairType: int] = {}
-HAIR_CHOICES["bob"] = 14
+HAIR_CHOICES["bob "] = 14
 HAIR_CHOICES["braids"] = 14
 HAIR_CHOICES["buzzcut"] = 14
 HAIR_CHOICES["curly"] = 14
@@ -145,10 +145,10 @@ HAIR_CHOICES["extra_long"] = 14
 HAIR_CHOICES["extra_long_skirt"] = 14
 HAIR_CHOICES["french_curl"] = 14
 HAIR_CHOICES["gentleman"] = 14
-HAIR_CHOICES["long_straight"] = 14
+HAIR_CHOICES["long_straight "] = 14
 HAIR_CHOICES["long_straight_skirt"] = 14
 HAIR_CHOICES["midiwave"] = 14
-HAIR_CHOICES["ponytail"] = 14
+HAIR_CHOICES["ponytail "] = 14
 HAIR_CHOICES["spacebuns"] = 14
 HAIR_CHOICES["wavy"] = 14
 
@@ -359,6 +359,9 @@ class CozyEntity(Entity):
                 self.animation_speed = 2
             elif self.action.action == 'swing':
                 tool = self.get_swing_tool()
+                self.animation_speed = 2
+            elif self.action.action == 'to_inventory':
+                tool = "pickup"
                 self.animation_speed = 2
         else:
             tool = self.get_idle_tool()

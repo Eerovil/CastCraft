@@ -1,5 +1,6 @@
 
 from typing import Optional
+from entity_types.minecraft_things import DroppedMinecraftBlock, MinecraftItem
 from time_utils import get_current_time
 
 from sqlitedict import SqliteDict
@@ -122,6 +123,15 @@ def handle_player_touch(request, direction):
                 timeout=get_current_time() + final_time,
                 target_id=blocking_entity.id
             )
+        elif action == "to_inventory":
+            logger.info(f"Player started picking up {blocking_entity.id}")
+            player_entity.action = Action(
+                action='to_inventory',
+                time=500,
+                timeout=get_current_time() + 500,
+                target_id=blocking_entity.id
+            )
+
 
     player_entity.update_sprites()
 
@@ -133,6 +143,9 @@ def handle_player_touch(request, direction):
 def handle_action_finished(entity: Entity, action: Action, entity_db: SqliteDict) -> tuple[list[Entity], list[str]]:
     changed_entities = []
     deleted_entity_ids = []
+    if not action:
+        return changed_entities, deleted_entity_ids
+    logger.info(f"Action finished: {action}")
     if action.action == 'move':
         entity.x_from = entity.x
         entity.y_from = entity.y
@@ -140,6 +153,25 @@ def handle_action_finished(entity: Entity, action: Action, entity_db: SqliteDict
         entity.update_sprites()
         entity_db[entity.id] = entity
     elif action.action == 'swing':
+        target_entity = entity_db[action.target_id]
+        changed_entities = target_entity.on_swing_destroy()
+        del entity_db[action.target_id]
+        deleted_entity_ids.append(action.target_id)
+        entity.action = None
+        entity.update_sprites()
+        entity_db[entity.id] = entity
+    elif action.action == 'to_inventory':
+        target_entity: DroppedMinecraftBlock = entity_db[action.target_id]
+        for item in entity.inventory.items:
+            if item.slug == f"{target_entity.block_type}_block":
+                item.quantity += 1
+                break
+        else:
+            inventory_item = MinecraftItem(
+                slug=f"{target_entity.block_type}_block",
+                quantity=1
+            )
+            entity.inventory.items.append(inventory_item)
         del entity_db[action.target_id]
         deleted_entity_ids.append(action.target_id)
         entity.action = None
@@ -166,7 +198,7 @@ def update_actions() -> tuple[list[Entity], list[str]]:
         if entity.action.timeout < now:
             changed_entities.append(entity)
             continue
-    
+
     if len(changed_entities) == 0:
         return ([], [])
 

@@ -3,11 +3,14 @@ import { drawGameMap } from './gamemap.ts'  // @ts-ignore
 import { initNetwork } from './socketUtils.ts'
 import { EntityMap } from './moreTypes'
 import { startTouchInput } from './touchInput'
+import { initializeInventory } from './inventory.ts'
+import { Entity } from './apiTypes.ts'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
     <canvas id="game-map"></canvas>
     <div id="touch-element"></div>
+    <div id="inventory"></div>
   </div>
 `
 
@@ -46,11 +49,22 @@ async function main() {
     entities: globalEntityMap,
     nickname: nickname,
   })
+
+  let playerId: string | null = null;
+  if (isMobile) {
+    for (const entity of Object.values(globalEntityMap)) {
+        if (entity.nickname === nickname) {
+          playerId = entity.id
+            break
+        }
+    }
+  }
+
   console.log('main: ', globalEntityMap)
   const canvas = document.querySelector<HTMLCanvasElement>('#game-map')!
   canvas.width = window.innerWidth
   canvas.height = window.innerHeight
-  drawGameMap(canvas, globalEntityMap)
+  drawGameMap(canvas, globalEntityMap, playerId)
   const touchElement = document.querySelector<HTMLDivElement>('#touch-element')!
   const touchCallbacks = {
     tapNextToPlayer: (direction: number) => {
@@ -59,6 +73,9 @@ async function main() {
     }
   }
   startTouchInput(touchElement, touchCallbacks)
+  if (playerId) {
+    initializeInventory(document.querySelector<HTMLDivElement>('#inventory')!, globalEntityMap, playerId)
+  }
 }
 
 main()

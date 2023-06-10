@@ -1,9 +1,10 @@
 import logging
 import random
+from entity_types.minecraft_things import MinecraftItem
 
 from db import get_entity_at_position, get_entity_db, get_free_entity_id, get_user_db
 from entity_types.cozy_character import CharacterChoice, CozyEntity, get_all_choices
-from models import Directions, Item, User
+from models import Directions, Item, User, Inventory
 from time_utils import get_current_time
 logger = logging.getLogger(__name__)
 
@@ -81,11 +82,22 @@ def generate_player_entity():
         sprites=[],
         direction=Directions.down,
         choice=get_random_character_choice(),
-        holding=Item(
-            id="0",
+        holding=MinecraftItem(
             slug="axe",
             woodcutting=10,
             mining=1,
+        ),
+        inventory=Inventory(
+            items=[
+                MinecraftItem(
+                    slug="axe",
+                    woodcutting=10,
+                    mining=1,
+                ),
+                MinecraftItem(
+                    slug="wood_block",
+                ),
+            ]
         )
     )
     player_entity.update_sprites()

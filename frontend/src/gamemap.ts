@@ -1,5 +1,6 @@
 // @ts-ignore
 import Entity from './apiTypes'
+import { getImg } from './imgUtils'
 import { EntityMap } from './moreTypes'
 import { getCurrentTime } from './timeUtils'
 
@@ -14,7 +15,7 @@ class MapDrawer {
     playerY: number = 0
     frameTime: number = 0
 
-    constructor(globalEntityMap: EntityMap, canvas: HTMLCanvasElement) {
+    constructor(globalEntityMap: EntityMap, canvas: HTMLCanvasElement, playerId: string | null) {
         this.entities = globalEntityMap
         this.canvas = canvas
         canvas.width = window.innerWidth
@@ -29,13 +30,7 @@ class MapDrawer {
         this.ctx = ctx
         if (isMobile) {
             // Find our player
-            const nickname = (window as any).nickname as string;
-            for (const [id, entity] of Object.entries(this.entities)) {
-                if (entity.nickname === nickname) {
-                    this.playerId = id
-                    break
-                }
-            }
+            this.playerId = playerId;
             if (!this.playerId) {
                 throw new Error('Could not find player')
             }
@@ -102,22 +97,6 @@ class MapDrawer {
         }
     }
 
-    async getImg(url: string) {
-        if (this.preloadedImages[url]) {
-            return this.preloadedImages[url]
-        }
-        const img = new Image()
-        img.src = url
-        await new Promise((resolve) => {
-            img.onload = () => {
-                img.decode().then(() => {
-                    resolve(null)
-                })
-            }
-        })
-        this.preloadedImages[url] = img
-        return img
-    }
     async drawGrid(ctx: CanvasRenderingContext2D) {
         // Draw a 32*32 grid starting at 0,0 to all directions
 
@@ -196,7 +175,7 @@ class MapDrawer {
         }
 
         for (const sprite of sprites) {
-            const img = await this.getImg(sprite.url)
+            const img = await getImg(sprite.url)
             ctx.drawImage(
                 img,
                 sprite.x, sprite.y, sprite.width, sprite.height,
@@ -217,8 +196,8 @@ class MapDrawer {
 }
 
 
-export function drawGameMap(canvas: HTMLCanvasElement, globalEntityMap: EntityMap) {
-    const mapDrawer = new MapDrawer(globalEntityMap, canvas)
+export function drawGameMap(canvas: HTMLCanvasElement, globalEntityMap: EntityMap, playerId: string | null) {
+    const mapDrawer = new MapDrawer(globalEntityMap, canvas, playerId)
     mapDrawer.redrawAllEntities();
     (window as any).mapDrawer = mapDrawer;
 }

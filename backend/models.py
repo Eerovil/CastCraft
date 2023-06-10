@@ -34,17 +34,43 @@ class Sprite(BaseModel):
     height: int
 
 
-ACTION_SLUGS = Literal["move", "swing"]
+ACTION_SLUGS = Literal["move", "swing", "to_inventory", "pick_up"]
 
 
 class Action(BaseModel):
     timeout: int  # When it will finish
     time: int  # How long it takes from start to finish (ms)
     action: ACTION_SLUGS
-    target_id: Optional[int]
+    target_id: Optional[str]
 
 
 ENTITY_MADE_OF = Literal["flesh", "wood", "stone", "iron", "gold", "diamond"]
+
+
+class Item(BaseModel):
+    quantity: int = 1  # Single item can merge with other same items
+    slug: Literal[ITEM_SLUGS]
+    sprite: Optional[Sprite] = None
+    woodcutting: Optional[int] = None
+    mining: Optional[int] = None
+    watering: Optional[int] = None
+
+    def get_material_swinging_efficiency(self, material: ENTITY_MADE_OF):
+        if material == "wood":
+            if self.woodcutting is None:
+                return 0
+            return self.woodcutting
+        elif material == "stone":
+            if self.mining is None:
+                return 0
+            return self.mining
+        elif material == "flesh":
+            return 0
+
+
+class Inventory(BaseModel):
+    items: List[Item] = []
+    slots: int = 5
 
 
 class Entity(BaseModel):
@@ -75,7 +101,12 @@ class Entity(BaseModel):
     # What happens when user tries to walk into this entity
     on_touch: Optional[ACTION_SLUGS] = None
 
+    inventory: Optional[Inventory] = None
+
     def update_sprites(self):
+        return
+
+    def on_swing_destroy(self):
         return
 
 
@@ -84,23 +115,3 @@ class User(BaseModel):
     entity_id: str  # Entity this player is controlling
     last_seen: int  # Last time this player was seen
     request_id: Optional[str]  # Request ID for this player
-
-
-class Item(BaseModel):
-    id: str
-    slug: Literal[ITEM_SLUGS]
-    woodcutting: Optional[int] = None
-    mining: Optional[int] = None
-    watering: Optional[int] = None
-
-    def get_material_swinging_efficiency(self, material: ENTITY_MADE_OF):
-        if material == "wood":
-            if self.woodcutting is None:
-                return 0
-            return self.woodcutting
-        elif material == "stone":
-            if self.mining is None:
-                return 0
-            return self.mining
-        elif material == "flesh":
-            return 0
