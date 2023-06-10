@@ -15,6 +15,7 @@ def generate_tree_entity():
 
     tree_entity = TreeEntity(
         id=_id,
+        made_of='wood',
         width=64,
         height=64 + 32,
         x=x,
@@ -36,6 +37,7 @@ def generate_rock_entity():
 
     rock_entity = RockEntity(
         id=_id,
+        made_of='stone',
         width=32,
         height=32,
         x_offset=1,

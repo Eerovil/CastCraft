@@ -68,7 +68,7 @@ def handle_player_touch(request, direction):
     player_entity = get_player_entity_from_request(request)
     entity_db = get_entity_db()
 
-    if player_entity.action is not None:
+    if not player_entity or player_entity.action is not None:
         logger.info("Player is already doing something")
         return [], []
 
@@ -104,10 +104,18 @@ def handle_player_touch(request, direction):
                 timeout=get_current_time() + 1000
             )
         elif action == "swing":
+            base_time = 10000
+            efficiency = 1
+            if player_entity.holding:
+                efficiency = (
+                    player_entity.holding.get_material_swinging_efficiency(blocking_entity.made_of)
+                )
+            logger.info(f"Player started swinging at {blocking_entity.id} with efficiency {efficiency}")
+            final_time = base_time / efficiency
             player_entity.action = Action(
                 action='swing',
-                time=1000,
-                timeout=get_current_time() + 1000,
+                time=final_time,
+                timeout=get_current_time() + final_time,
                 target_id=blocking_entity.id
             )
 
@@ -156,7 +164,7 @@ def update_actions() -> tuple[list[Entity], list[str]]:
             continue
     
     if len(changed_entities) == 0:
-        return []
+        return ([], [])
 
     for entity in changed_entities:
         handle_result = (

@@ -92,3 +92,15 @@ class Item(BaseModel):
     woodcutting: Optional[int] = None
     mining: Optional[int] = None
     watering: Optional[int] = None
+
+    def get_material_swinging_efficiency(self, material: ENTITY_MADE_OF):
+        if material == "wood":
+            if self.woodcutting is None:
+                return 0
+            return self.woodcutting
+        elif material == "stone":
+            if self.mining is None:
+                return 0
+            return self.mining
+        elif material == "flesh":
+            return 0

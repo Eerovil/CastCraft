@@ -15,7 +15,7 @@ def get_user_from_request(request_sid):
             return user
 
 
-def get_player_entity_from_request(request_sid):
+def get_player_entity_from_request(request_sid) -> CozyEntity | None:
     user = get_user_from_request(request_sid)
     if user is None:
         return None
@@ -58,7 +58,9 @@ def generate_player_entity():
         ),
         holding=Item(
             id="0",
-            slug="axe"
+            slug="axe",
+            woodcutting=10,
+            mining=1,
         )
     )
     player_entity.update_sprites()
