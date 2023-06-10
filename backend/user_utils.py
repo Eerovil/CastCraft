@@ -99,6 +99,9 @@ def generate_player_entity():
                     woodcutting=1,
                     mining=10,
                 ),
+                MinecraftItem(
+                    slug="wood_block",
+                )
             ]
         )
     )

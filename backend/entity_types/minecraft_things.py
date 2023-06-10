@@ -1,4 +1,5 @@
 from typing import Literal
+from db import get_entity_db, get_free_entity_id
 
 from models import ACTION_SLUGS, Entity, Item, Sprite
 
@@ -50,12 +51,26 @@ class PlacedMinecraftBlock(DroppedMinecraftBlock):
     width: int = 32
     height: int = 32
 
-    x_offset: int = 16
-    y_offset: int = 16
+    x_offset: int = 0
+    y_offset: int = 0
 
     block_type: BlockType
 
     on_touch: ACTION_SLUGS = "swing"
+
+    def on_swing_destroy(self):
+        # Create a MinecraftBlock entity
+        from entity_types.minecraft_things import DroppedMinecraftBlock
+        block = DroppedMinecraftBlock(
+            id=get_free_entity_id(),
+            block_type=self.block_type,
+            x=self.x,
+            y=self.y,
+        )
+        block.update_sprites()
+        entity_db = get_entity_db()
+        entity_db[block.id] = block
+        return [block]
 
 
 class MinecraftItem(Item):

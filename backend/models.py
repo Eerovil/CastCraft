@@ -34,7 +34,7 @@ class Sprite(BaseModel):
     height: int
 
 
-ACTION_SLUGS = Literal["move", "swing", "to_inventory", "pick_up"]
+ACTION_SLUGS = Literal["move", "swing", "to_inventory", "pick_up", "place"]
 
 
 class Action(BaseModel):

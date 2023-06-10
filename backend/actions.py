@@ -1,11 +1,11 @@
 
 from typing import Optional
-from entity_types.minecraft_things import DroppedMinecraftBlock, MinecraftItem
+from entity_types.minecraft_things import DroppedMinecraftBlock, MinecraftItem, PlacedMinecraftBlock
 from time_utils import get_current_time
 
 from sqlitedict import SqliteDict
 
-from db import get_entity_at_position, get_entity_db
+from db import get_entity_at_position, get_entity_db, get_free_entity_id
 from user_utils import get_player_entity_from_request
 from utils import MAP_BOUNDS, TILE_SIZE
 from models import ACTION_SLUGS, Action, Directions, Entity
@@ -93,7 +93,10 @@ def handle_player_touch(request, direction):
             logger.info(f"Player can't move to {target_x}, {target_y}")
             fix_player_if_out_of_bounds(player_entity)      
             action = None  
-    
+
+    if action == "move" and player_entity.holding and 'block' in player_entity.holding.slug:
+        action = "place"
+
     if action:
         if action == "move":
             logger.info(f"Player started moving from {player_entity.x} to direction {direction}")
@@ -131,6 +134,14 @@ def handle_player_touch(request, direction):
                 timeout=get_current_time() + 500,
                 target_id=blocking_entity.id
             )
+        elif action == "place":
+            logger.info(f"Player started placing")
+            player_entity.action = Action(
+                action='place',
+                time=500,
+                timeout=get_current_time() + 500,
+            )
+
 
 
     player_entity.update_sprites()
@@ -177,6 +188,47 @@ def handle_action_finished(entity: Entity, action: Action, entity_db: SqliteDict
         entity.action = None
         entity.update_sprites()
         entity_db[entity.id] = entity
+    elif action.action == 'place':
+        if entity.holding:
+            block_type = entity.holding.slug
+
+            if entity.direction == Directions.up:
+                target_x = entity.x
+                target_y = entity.y - TILE_SIZE
+            elif entity.direction == Directions.down:
+                target_x = entity.x
+                target_y = entity.y + TILE_SIZE
+            elif entity.direction == Directions.left:
+                target_x = entity.x - TILE_SIZE
+                target_y = entity.y
+            elif entity.direction == Directions.right:
+                target_x = entity.x + TILE_SIZE
+                target_y = entity.y
+            new_block = PlacedMinecraftBlock(
+                id=get_free_entity_id(),
+                block_type=block_type.replace('_block', ''),
+                made_of=block_type.replace('_block', ''),
+                x=target_x,
+                y=target_y,
+            )
+            new_block.update_sprites()
+            entity_db[new_block.id] = new_block
+            changed_entities.append(new_block)
+
+            entity.holding.quantity -= 1
+            index = -1
+            for item in entity.inventory.items:
+                index += 1
+                if item.slug == entity.holding.slug:
+                    item.quantity = entity.holding.quantity
+                    if item.quantity <= 0:
+                        del entity.inventory.items[index]
+                        entity.holding = None
+                    break
+
+            entity.action = None
+            entity.update_sprites()
+            entity_db[entity.id] = entity
     else:
         entity.action = None
         entity.update_sprites()
