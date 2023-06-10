@@ -1,8 +1,8 @@
 import logging
 import random
 
-from db import get_entity_db, get_user_db
-from entity_types.cozy_character import CharacterChoice, CozyEntity
+from db import get_entity_at_position, get_entity_db, get_free_entity_id, get_user_db
+from entity_types.cozy_character import CharacterChoice, CozyEntity, get_all_choices
 from models import Directions, Item, User
 from time_utils import get_current_time
 logger = logging.getLogger(__name__)
@@ -27,18 +27,48 @@ def get_player_entity_from_request(request_sid) -> CozyEntity | None:
     return ret
 
 
+def get_random_character_choice():
+    char_choices = get_all_choices()
+    clothes = random.choice(list(char_choices['clothes'].keys()))
+    clothes_color = random.randrange(0, char_choices['clothes'][clothes])
+    pants = random.choice(list(char_choices['pants'].keys()))
+    pants_color = random.randrange(0, char_choices['pants'][pants])
+    shoes = random.choice(list(char_choices['shoes'].keys()))
+    shoes_color = random.randrange(0, char_choices['shoes'][shoes])
+    eyes = 'eyes'
+    eyes_color = random.randrange(0, char_choices['eyes'][eyes])
+    hair = random.choice(list(char_choices['hair'].keys()))
+    hair_color = random.randrange(0, char_choices['hair'][hair])
+
+    return CharacterChoice(
+        char_index=random.randrange(0, 8),
+        clothes=clothes,
+        clothes_color=clothes_color,
+        pants=pants,
+        pants_color=pants_color,
+        shoes=shoes,
+        shoes_color=shoes_color,
+        eyes=eyes,
+        eyes_color=eyes_color,
+        hair=hair,
+        hair_color=hair_color,
+    )
+
+
 def generate_player_entity():
-    _id = 0
-    entity_db = get_entity_db()
-    while str(_id) in entity_db:
-        _id += 1
-    _id = str(_id)
+    _id = get_free_entity_id()
+
+    x, y = 0, 0
+    while get_entity_at_position(x, y) is not None:
+        x, y = random.randrange(2, 15) * 32, random.randrange(2, 15) * 32
+
+
     player_entity = CozyEntity(
         id=_id,
         width=64,
         height=64,
-        x=random.randrange(2, 15) * 32,
-        y=random.randrange(2, 15) * 32,
+        x=x,
+        y=y,
         x_from=0,
         y_from=0,
         speed=0,
@@ -46,16 +76,7 @@ def generate_player_entity():
         animation_speed=2,  # 10 ticks per animation
         sprites=[],
         direction=Directions.down,
-        choice=CharacterChoice(
-            char_index=random.randrange(0, 8),
-            clothes="basic",
-            pants="pants",
-            shoes="shoes",
-            eyes="eyes",
-            eyes_color=2,
-            acc=None,
-            hair=None,
-        ),
+        choice=get_random_character_choice(),
         holding=Item(
             id="0",
             slug="axe",
@@ -64,6 +85,7 @@ def generate_player_entity():
         )
     )
     player_entity.update_sprites()
+    entity_db = get_entity_db()
     entity_db[_id] = player_entity
     return player_entity
 

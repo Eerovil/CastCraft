@@ -3,7 +3,8 @@
 """
 
 from pydantic import BaseModel
-from typing import List, Optional, Literal  # noqa
+from typing import List, Optional, Literal
+from utils import literal_to_list  # noqa
 from models import Sprite, Entity, Item
 
 
@@ -366,3 +367,26 @@ class CozyEntity(Entity):
 
         sprites = get_tiles_for(self.choice, tool=tool, direction=self.direction)
         self.sprites = sprites
+
+
+def get_all_choices():
+    return {
+        'clothes': {
+            item: CLOTHES_CHOICES[item] for item in literal_to_list(ClothesType)
+        },
+        'pants': {
+            item: PANTS_CHOICES[item] for item in literal_to_list(PantsType)
+        },
+        'shoes': {
+            item: SHOES_CHOICES[item] for item in literal_to_list(ShoesType)
+        },
+        'acc': {
+            item: ACC_CHOICES[item] for item in literal_to_list(AccType)
+        },
+        'hair': {
+            item: HAIR_CHOICES[item] for item in literal_to_list(HairType)
+        },
+        'eyes': {
+            'eyes': EYES_CHOICES['eyes'],
+        },
+    }

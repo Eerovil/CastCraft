@@ -26,5 +26,6 @@ def get_free_entity_id():
     while str(_id) in entity_db:
         _id += 1
     _id = str(_id)
-    entity_db[_id] = None
+    # Create dummy entity at this id
+    entity_db[_id] = Entity(id=_id, x=-9999, y=-9999, width=64, height=64)
     return _id

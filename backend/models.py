@@ -76,7 +76,7 @@ class Entity(BaseModel):
     on_touch: Optional[ACTION_SLUGS] = None
 
     def update_sprites(self):
-        raise NotImplementedError("TODO")
+        return
 
 
 class User(BaseModel):
