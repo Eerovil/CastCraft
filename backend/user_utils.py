@@ -48,14 +48,14 @@ def get_random_character_choice():
         clothes_color=clothes_color,
         pants=pants,
         pants_color=pants_color,
-        shoes=shoes,
-        shoes_color=shoes_color,
+        # shoes=shoes,
+        # shoes_color=shoes_color,
         eyes=eyes,
         eyes_color=eyes_color,
         hair=hair,
         hair_color=hair_color,
-        acc=acc,
-        acc_color=acc_color,
+        # acc=acc,
+        # acc_color=acc_color,
     )
 
 

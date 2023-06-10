@@ -28,6 +28,7 @@ function setQueryParam(key: string, value: string) {
 }
 
 async function main() {
+  (window as any).spritesDrawn = 0
   const globalEntityMap: EntityMap = {}
   const isMobile = window.innerWidth < 600
 

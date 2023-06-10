@@ -12,6 +12,7 @@ class MapDrawer {
     playerId: string | null = null
     playerX: number = 0
     playerY: number = 0
+    frameTime: number = 0
 
     constructor(globalEntityMap: EntityMap, canvas: HTMLCanvasElement) {
         this.entities = globalEntityMap
@@ -75,12 +76,12 @@ class MapDrawer {
             promises.push(this.drawEntity(ctx, entity))
         }
         Promise.all(promises).then(() => {
-            window.requestAnimationFrame(() => {
-                setTimeout(() => {
+            setTimeout(() => {
+                window.requestAnimationFrame(() => {
                     this.animationIndex += 1
                     this.redrawAllEntities()
-                }, 33)  // 30fps = 1000/30 = 33.333
-            })
+                })
+            }, 40)
         })
     }
 
@@ -109,7 +110,9 @@ class MapDrawer {
         img.src = url
         await new Promise((resolve) => {
             img.onload = () => {
-                resolve(null)
+                img.decode().then(() => {
+                    resolve(null)
+                })
             }
         })
         this.preloadedImages[url] = img
@@ -156,7 +159,6 @@ class MapDrawer {
                 const timeSpent = actionFullTime - timeLeft;
                 const percent = timeSpent / actionFullTime;
                 if (percent != Infinity) {
-                    console.log('percent: ', percent)
                     const x_from = entity.x_from
                     const y_from = entity.y_from
                     x = x_from + (entity.x - x_from) * percent;
@@ -183,6 +185,16 @@ class MapDrawer {
         x = newCoords.x
         y = newCoords.y
 
+        if (this.playerId) {
+            // If x and y are not visible, don't draw them
+            if (x < -50 || x > window.innerWidth + 50) {
+                return
+            }
+            if (y < -50 || y > window.innerHeight + 50) {
+                return
+            }
+        }
+
         for (const sprite of sprites) {
             const img = await this.getImg(sprite.url)
             ctx.drawImage(
@@ -190,6 +202,7 @@ class MapDrawer {
                 sprite.x, sprite.y, sprite.width, sprite.height,
                 x + entity.x_offset, y + entity.y_offset, entity.width, entity.height
             );
+            (window as any).spritesDrawn += 1
         }
         // Draw a dot at the x/y of the entity
         ctx.fillStyle = 'red'
