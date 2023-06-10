@@ -105,19 +105,19 @@ class MapDrawer {
         let x = originX - (32 * 100);
         let y = originY - (32 * 100);
 
-        while (x < originX + (32 * 100)) {
+        while (x < originX + (32 * 300)) {
             // Draw vertical line
             ctx.beginPath();
-            ctx.moveTo(x, -1000);
-            ctx.lineTo(x, 1000);
+            ctx.moveTo(x, -3000);
+            ctx.lineTo(x, 3000);
             ctx.stroke();
             x += 32;
         }
 
-        while (y < originY + (32 * 100)) {
+        while (y < originY + (32 * 300)) {
             ctx.beginPath();
-            ctx.moveTo(-1000, y);
-            ctx.lineTo(1000, y);
+            ctx.moveTo(-3000, y);
+            ctx.lineTo(3000, y);
             ctx.stroke();
             y += 32;
         }

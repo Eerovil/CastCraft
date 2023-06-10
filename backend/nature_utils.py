@@ -11,7 +11,7 @@ def generate_tree_entity():
     _id = get_free_entity_id()
     x, y = 0, 0
     while get_entity_at_position(x, y) is not None:
-        x, y = random.randrange(2, 15) * 32, random.randrange(2, 15) * 32
+        x, y = random.randrange(30, 45) * 32, random.randrange(2, 15) * 32
 
     tree_entity = TreeEntity(
         id=_id,
@@ -33,7 +33,7 @@ def generate_rock_entity():
     _id = get_free_entity_id()
     x, y = 0, 0
     while get_entity_at_position(x, y) is not None:
-        x, y = random.randrange(2, 15) * 32, random.randrange(2, 15) * 32
+        x, y = random.randrange(2, 15) * 32, random.randrange(15, 30) * 32
 
     rock_entity = RockEntity(
         id=_id,
@@ -63,10 +63,10 @@ def spawn_nature_things():
             del entity_db[entity.id]
         elif isinstance(entity, RockEntity):
             del entity_db[entity.id]
-    while tree_count < 5:
+    while tree_count < 20:
         generate_tree_entity()
         tree_count += 1
-    while rock_count < 5:
+    while rock_count < 20:
         generate_rock_entity()
         rock_count += 1
 

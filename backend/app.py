@@ -127,11 +127,5 @@ if __name__ == '__main__':
     entities = get_entity_db()
     entities.clear()
     spawn_nature_things()
-    from entity_types.minecraft_things import DroppedMinecraftBlock
-    entities["minecraft_block_1"] = DroppedMinecraftBlock(
-        id="minecraft_block_1",
-        x=10 * 32,
-        y=10 * 32,
-        block_type="wood"
-    )
+
     socketio.run(app, debug=True, host="0.0.0.0", port=5174)
