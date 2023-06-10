@@ -79,6 +79,13 @@ class socketUtils {
             console.log("entity_update: ", data);
             this.handleEntityUpdate(data);
         });
+        socket.on('disconnect', () => {
+            // After a disconnect, we want to reload the page
+            // after reconnecting
+            socket.on('connect', () => {
+                window.location.reload();
+            });
+        });
     }
 
     waitUntilConnected() {

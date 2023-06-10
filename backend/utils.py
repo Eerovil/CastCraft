@@ -16,6 +16,7 @@ def literal_to_list(literal: Literal):
     str_repr: str = str(literal)
     str_repr = str_repr.replace('typing.Literal[', '')
     str_repr = str_repr.replace(']', '')
-    str_repr = str_repr.replace(' ', '')
+    str_repr = str_repr.replace(", ", ",")
+    str_repr = str_repr.replace("'", "")
     _list = str_repr.split(',')
-    return [_item[1:-1] for _item in _list]
+    return [_item for _item in _list]

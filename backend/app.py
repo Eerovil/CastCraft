@@ -36,7 +36,18 @@ def conn(data):
     if nickname is None:
         return
 
-    handle_user_connected(request.sid, nickname)
+    player_entity = handle_user_connected(request.sid, nickname)
+
+    logger.info("Player %s connected, entity id %s",
+                nickname, player_entity.id if player_entity else None)
+
+    if player_entity:
+        emit('entity_update', {
+            'deletedEntityIds': [],
+            'changedEntities': {
+                player_entity.id: player_entity.dict()
+            }
+        }, broadcast=True)
 
     return build_full_entity_dump()
 
@@ -76,6 +87,7 @@ def fetch_entity_update():
 
 
 def build_full_entity_dump():
+    update_actions()
     entity_db = get_entity_db()
     ret = {
         "entities": {}

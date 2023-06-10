@@ -39,6 +39,8 @@ def get_random_character_choice():
     eyes_color = random.randrange(0, char_choices['eyes'][eyes])
     hair = random.choice(list(char_choices['hair'].keys()))
     hair_color = random.randrange(0, char_choices['hair'][hair])
+    acc = random.choice(list(char_choices['acc'].keys()))
+    acc_color = random.randrange(0, char_choices['acc'][acc])
 
     return CharacterChoice(
         char_index=random.randrange(0, 8),
@@ -52,6 +54,8 @@ def get_random_character_choice():
         eyes_color=eyes_color,
         hair=hair,
         hair_color=hair_color,
+        acc=acc,
+        acc_color=acc_color,
     )
 
 
@@ -103,16 +107,20 @@ def handle_user_connected(request_sid, nickname):
     user.last_seen = get_current_time()
     user.request_id = request_sid
 
-    entity_db = get_entity_db()
-    entity = entity_db.get(user.entity_id)
-    if entity is None:
-        entity = generate_player_entity()
-    if entity.nickname != nickname:
-        entity = generate_player_entity()
-    elif not isinstance(entity, CozyEntity):
-        entity = generate_player_entity()
-    entity.nickname = nickname
-    entity_db[entity.id] = entity
-    user.entity_id = entity.id
+    entity = None
+    if nickname and nickname != 'TV':
+        entity_db = get_entity_db()
+        entity = entity_db.get(user.entity_id)
+        if entity is None:
+            entity = generate_player_entity()
+        if entity.nickname != nickname:
+            entity = generate_player_entity()
+        elif not isinstance(entity, CozyEntity):
+            entity_db.pop(entity.id)
+            entity = generate_player_entity()
+        entity.nickname = nickname
+        entity_db[entity.id] = entity
+        user.entity_id = entity.id
 
     user_db[nickname] = user
+    return entity

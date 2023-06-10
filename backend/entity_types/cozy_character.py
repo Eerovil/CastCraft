@@ -71,20 +71,19 @@ ANIMATION_LENGTH['water'] = 5
 
 ClothesType = Literal[
     "basic", "clown", "dress ", "floral", "pumpkin",
-    "sailor_bow", "sailor", "skull", "spaghetti", "spooky ", "sporty",
+    "sailor_bow", "sailor", "skull", "spaghetti", "sporty",
     "stripe", "suit", "witch"
 ]
 CLOTHES_CHOICES: dict[ClothesType: int] = {}
 CLOTHES_CHOICES["basic"] = 10  # 10 different colors
 CLOTHES_CHOICES["clown"] = 2
-CLOTHES_CHOICES["dress"] = 10
+CLOTHES_CHOICES["dress "] = 10
 CLOTHES_CHOICES["floral"] = 10
 CLOTHES_CHOICES["pumpkin"] = 2
 CLOTHES_CHOICES["sailor_bow"] = 10
 CLOTHES_CHOICES["sailor"] = 10
 CLOTHES_CHOICES["skull"] = 10
 CLOTHES_CHOICES["spaghetti"] = 10
-CLOTHES_CHOICES["spooky"] = 1
 CLOTHES_CHOICES["sporty"] = 10
 CLOTHES_CHOICES["stripe"] = 10
 CLOTHES_CHOICES["suit"] = 10
@@ -113,7 +112,7 @@ EYES_CHOICES["eyes"] = 10
 AccType = Literal[
     "beard", "earring_emerald", "earring_emerald_silver", "earring_red", "earring_red_silver",
     "glasses", "glasses_sun", "hat_cowboy", "hat_lucky", "hat_pumpkin", "hat_pumpkin_purple",
-    "hat_witch", "mask_clown_blue", "mask_clown_red", "mask_spooky"
+    "hat_witch", "mask_clown_blue", "mask_clown_red",
 ]
 ACC_CHOICES: dict[AccType: int] = {}
 ACC_CHOICES["beard"] = 14
@@ -130,7 +129,6 @@ ACC_CHOICES["hat_pumpkin_purple"] = 1
 ACC_CHOICES["hat_witch"] = 1
 ACC_CHOICES["mask_clown_blue"] = 1
 ACC_CHOICES["mask_clown_red"] = 1
-ACC_CHOICES["mask_spooky"] = 1
 
 HairType = Literal[
     "bob", "braids", "buzzcut", "curly", "emo", "extra_long", "extra_long_skirt",

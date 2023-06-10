@@ -68,8 +68,12 @@ def handle_player_touch(request, direction):
     player_entity = get_player_entity_from_request(request)
     entity_db = get_entity_db()
 
+    if not player_entity:
+        logger.info("Player entity not found")
+        return [], []
+
     if not player_entity or player_entity.action is not None:
-        logger.info("Player is already doing something")
+        logger.info("Player is already doing something: %s", player_entity.action)
         return [], []
 
     target_x, target_y = get_target_position_from_direction(direction, player_entity)

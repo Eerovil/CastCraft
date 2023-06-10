@@ -190,10 +190,15 @@ class MapDrawer {
                 sprite.x, sprite.y, sprite.width, sprite.height,
                 x + entity.x_offset, y + entity.y_offset, entity.width, entity.height
             );
-            // Draw a dot at the x/y of the entity
-            ctx.fillStyle = 'red'
-            ctx.fillRect(x, y, 1, 1)
-
+        }
+        // Draw a dot at the x/y of the entity
+        ctx.fillStyle = 'red'
+        ctx.font = '4px Arial'
+        ctx.fillText(entity.id, x, y)
+        if (entity.nickname) {
+            ctx.fillStyle = 'black'
+            ctx.font = '10px Arial'
+            ctx.fillText(entity.nickname, x, y - 10)
         }
     }
 }
