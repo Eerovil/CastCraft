@@ -30,6 +30,8 @@ class socketUtils {
         this.socket = io(URL, {
             path: "/castcraft/socket.io",
             forceNew: true,
+            retries: 10,
+            ackTimeout: 1000
         });
         window.onunload = () => {
             this.socket.close();
