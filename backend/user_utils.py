@@ -23,6 +23,7 @@ def get_user_from_request(request_sid):
 def get_player_entity_from_request(request_sid) -> Optional[CozyEntity]:
     user = get_user_from_request(request_sid)
     if user is None:
+        logger.warning("No user found for request %s", request_sid)
         return None
     entity_db = get_entity_db()
     ret = entity_db.get(user.entity_id)

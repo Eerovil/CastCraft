@@ -47,48 +47,13 @@ class socketUtils {
         Object.assign(this.entities, entities);
     }
 
-    fetchEntityUpdate() {
-        this.socket.emit("fetch_entity_update");
-    }
-
-    handleEntityActionCheck() {
-        // Go through entities and find one that has an action
-        // That has the lowest timeout
-        const currentTime = getCurrentTime();
-        let lowestTimeout = Infinity;
-        for (const entity of Object.values(this.entities)) {
-            if (entity.action && entity.action.timeout < lowestTimeout) {
-                lowestTimeout = entity.action.timeout;
-            }
-        }
-        if (lowestTimeout === Infinity) {
-            if (this.actionCheckTimeout !== null) {
-                clearTimeout(this.actionCheckTimeout);
-            }
-            return;
-        }
-        const timeUntilNextAction = lowestTimeout - currentTime + 50;
-        if (timeUntilNextAction <= 0) {
-            this.fetchEntityUpdate();
-        } else {
-            if (this.actionCheckTimeout !== null) {
-                clearTimeout(this.actionCheckTimeout);
-            }
-            this.actionCheckTimeout = setTimeout(() => {
-                this.fetchEntityUpdate();
-            }, timeUntilNextAction);
-        }
-    }
-
     handleEntityUpdate(data: PartialDump) {
-        console.log("update: ", data);
         for (const id of data.deletedEntityIds) {
             delete this.entities[id];
         }
         for (const entity of Object.values(data.changedEntities)) {
             this.entities[entity.id] = entity;
         }
-        this.handleEntityActionCheck();
     }
 
     afterFirstConnect() {
@@ -108,7 +73,19 @@ class socketUtils {
     waitUntilConnected() {
         return new Promise((resolve) => {
             this.socket.on('connect', () => {
-                this.socket.on('firstConnect', (data: FullDump) => {
+                // Send a POST request to /castcraft/api/firstConnect
+                // to get the initial state of the game
+                // NOTE: Don't use socketio
+                fetch('/castcraft/api/firstConnect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        nickname: this.nickname,
+                        requestSid: this.socket.id,
+                    })
+                }).then((response) => response.json()).then((data: FullDump) => {
                     console.log("connected: ", data);
                     if (!data || !data.entities) {
                         return;
@@ -116,7 +93,12 @@ class socketUtils {
                     this.setEntities(data.entities);
                     this.afterFirstConnect();
                     const pingStart = getCurrentTime();
-                    this.socket.on('pong', (data: ServerTimeData) => {
+                    fetch('/castcraft/api/ping', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                    }).then((response) => response.json()).then((data: ServerTimeData) => {
                         const pingEnd = getCurrentTime();
                         const serverTime = data.serverTime;
                         const currentServerTime = serverTime + (pingEnd - pingStart) / 2;
@@ -124,10 +106,6 @@ class socketUtils {
                         console.log(getCurrentTime(), currentServerTime, (pingEnd - pingStart) / 2)
                         resolve(null);
                     })
-                    this.socket.emit('ping', {});
-                });
-                this.socket.emit('connected', {
-                    'nickname': this.nickname,
                 });
             });
         });

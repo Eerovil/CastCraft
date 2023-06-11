@@ -35,31 +35,32 @@ def index2():
     return redirect('/castcraft/index.html')
 
 
-@socketio.on('connected')
-def conn(data):
+@app.route('/castcraft/api/firstConnect', methods=['POST'])
+def conn():
+    data = request.get_json()
     logger.info("Connected: %s", data)
-    print("Connected")
     nickname = data.get("nickname")
+    request_sid = data.get("requestSid")
     if nickname:
-        player_entity = handle_user_connected(request.sid, nickname)
+        player_entity = handle_user_connected(request_sid, nickname)
 
         logger.info("Player %s connected, entity id %s",
                     nickname, player_entity.id if player_entity else None)
 
         if player_entity:
-            emit('entity_update', {
+            socketio.emit('entity_update', {
                 'deletedEntityIds': [],
                 'changedEntities': {
                     player_entity.id: player_entity.dict()
                 }
-            }, broadcast=True)
+            })
 
-    emit('firstConnect', build_full_entity_dump(), broadcast=False)
+    return build_full_entity_dump()
 
 
-@socketio.on('ping')
-def conn(data):
-    emit('pong', {"serverTime": get_current_time()}, broadcast=False)
+@app.route('/castcraft/api/ping', methods=['POST'])
+def ping():
+    return {"serverTime": get_current_time()}
 
 
 @socketio.on('movePlayer')
