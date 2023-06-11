@@ -29,6 +29,11 @@ def index():
     return redirect('/castcraft/index.html')
 
 
+@app.route('/castcraft/')
+def index():
+    return redirect('/castcraft/index.html')
+
+
 @socketio.on('connected')
 def conn(data):
     logger.info("Connected: %s", data)
