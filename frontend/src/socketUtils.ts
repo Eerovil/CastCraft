@@ -4,9 +4,11 @@ import { getCurrentTime } from "./timeUtils";
 import { Item } from "./apiTypes";
 
 // "undefined" means the URL will be computed from the `window.location` object
-const URL = undefined;
+// Create url like this: /castcraft/socketio
 
-export const socket = io(URL);
+const URL = window.location.protocol + "//" + window.location.host;
+console.log("URL: ", URL);
+export const socket = io(URL, {path: "/castcraft/socket.io"});
 
 interface socketUtilsProps {
     entities: EntityMap,
