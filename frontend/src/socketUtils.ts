@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 import { EntityMap, FullDump, PartialDump } from "./moreTypes";
-import { getCurrentTime } from "./timeUtils";
+import { getCurrentTime, setCurrentTime } from "./timeUtils";
 import { Item } from "./apiTypes";
 
 // "undefined" means the URL will be computed from the `window.location` object
@@ -13,6 +13,10 @@ export const socket = io(URL, {path: "/castcraft/socket.io"});
 interface socketUtilsProps {
     entities: EntityMap,
     nickname: string,
+}
+
+interface ServerTimeData {
+    serverTime: number
 }
 
 class socketUtils {
@@ -100,7 +104,14 @@ class socketUtils {
                     console.log("connected: ", data);
                     this.setEntities(data.entities);
                     this.afterFirstConnect();
-                    resolve(null);
+                    const pingStart = getCurrentTime();
+                    socket.emit('ping', {}, (data: ServerTimeData) => {
+                        const pingEnd = getCurrentTime();
+                        const serverTime = data.serverTime;
+                        const currentServerTime = serverTime + (pingEnd - pingStart) / 2;
+                        setCurrentTime(currentServerTime); 
+                        resolve(null);
+                    });
                 });
             });
         });

@@ -73,18 +73,6 @@ def handle_player_touch(request, direction):
         logger.info("Player entity not found")
         return [], []
 
-    if player_entity.action is not None:
-        logger.info("Player is already doing something: %s", player_entity.action)
-
-        if player_entity.action.action == 'move':
-            return [], []
-
-        # Cancel the current action
-        player_entity.action = None
-        player_entity.update_sprites()
-        entity_db[player_entity.id] = player_entity
-        return [], [player_entity]
-
     target_x, target_y = get_target_position_from_direction(direction, player_entity)
 
     blocking_entity = get_entity_at_position(target_x, target_y)
@@ -104,6 +92,21 @@ def handle_player_touch(request, direction):
 
     if action == "move" and player_entity.holding and 'block' in player_entity.holding.slug:
         action = "place"
+
+    if player_entity.action is not None:
+        if player_entity.action.action == "action":
+            # Probably clicked again, just return nothing
+            return [], []
+        logger.info("Player is already doing something: %s", player_entity.action)
+
+        if player_entity.action.action == 'move':
+            return [], []
+
+        # Cancel the current action
+        player_entity.action = None
+        player_entity.update_sprites()
+        entity_db[player_entity.id] = player_entity
+        return [], [player_entity]
 
     if action:
         if action == "move":

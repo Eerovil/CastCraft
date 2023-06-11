@@ -5,6 +5,7 @@ from flask import Flask, request, redirect
 from flask_socketio import SocketIO, emit
 from sqlitedict import SqliteDict
 from actions import update_actions, handle_player_touch
+from time_utils import get_current_time
 from db import get_entity_db
 from user_utils import handle_user_connected
 from nature_utils import spawn_nature_things
@@ -56,6 +57,11 @@ def conn(data):
         }, broadcast=True)
 
     return build_full_entity_dump()
+
+
+@socketio.on('ping')
+def conn(data):
+    return {"serverTime": get_current_time()}
 
 
 @socketio.on('movePlayer')
