@@ -108,7 +108,7 @@ class socketUtils {
                     'nickname': this.nickname,
                 }, (data: FullDump) => {
                     console.log("connected: ", data);
-                    if (!data.entities) {
+                    if (!data || !data.entities) {
                         return;
                     }
                     this.setEntities(data.entities);
