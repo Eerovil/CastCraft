@@ -75,12 +75,15 @@ def handle_player_touch(request, direction):
 
     if player_entity.action is not None:
         logger.info("Player is already doing something: %s", player_entity.action)
+
+        if player_entity.action.action == 'move':
+            return [], []
+
         # Cancel the current action
-        if player_entity.action.action != 'move':
-            player_entity.action = None
-            player_entity.update_sprites()
-            entity_db[player_entity.id] = player_entity
-            return [], [player_entity]
+        player_entity.action = None
+        player_entity.update_sprites()
+        entity_db[player_entity.id] = player_entity
+        return [], [player_entity]
 
     target_x, target_y = get_target_position_from_direction(direction, player_entity)
 
