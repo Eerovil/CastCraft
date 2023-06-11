@@ -28,7 +28,6 @@ Sentry.init({
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
-    <canvas id="game-map-background"></canvas>
     <canvas id="game-map"></canvas>
     <div id="touch-element"></div>
     <div id="inventory"></div>
@@ -106,11 +105,8 @@ async function main() {
   const canvas = document.querySelector<HTMLCanvasElement>('#game-map')!
   canvas.width = window.innerWidth
   canvas.height = window.innerHeight
-  drawGameMap(canvas, globalEntityMap, playerId, mapSize)
-  // drawGameMap.setBackground(
-  //   document.querySelector<HTMLCanvasElement>('#game-map-background')!,
-  //   backgroundTileMap,
-  // )
+  const gameMap = drawGameMap(canvas, globalEntityMap, playerId, mapSize)
+  gameMap.setBackground(backgroundTileMap,)
   const touchElement = document.querySelector<HTMLDivElement>('#touch-element')!
   const touchCallbacks = {
     tapNextToPlayer: (direction: number) => {
@@ -119,6 +115,7 @@ async function main() {
     }
   }
   startTouchInput(touchElement, touchCallbacks)
+  const inventoryEl = document.querySelector<HTMLDivElement>('#inventory')!
   if (playerId) {
     const inventoryCallbacks = {
       selectItem: (item: Item) => {
@@ -126,10 +123,11 @@ async function main() {
         socketHandler.selectItem(item)
       }
     }
-    const inventoryEl = document.querySelector<HTMLDivElement>('#inventory')!
     initializeInventory(inventoryEl, globalEntityMap, playerId, inventoryCallbacks)
     const topBarEl = document.querySelector<HTMLDivElement>('#top-bar')!
     initializeTopBar(topBarEl);
+  } else {
+    inventoryEl.remove()
   }
 }
 

@@ -3,7 +3,7 @@ body {
   background-color: white !important;
 }
 
-#game-map-background, #game-map {
+#game-map {
   width: 100vw;
   height: 100vh;
 

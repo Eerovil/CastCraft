@@ -16,7 +16,7 @@ class MapDrawer {
     frameTime: number = 0
 
     mapSize: number[] = [0, 0, 0, 0]
-    backgroundCanvas: HTMLCanvasElement | null = null
+    backgroundImage: HTMLImageElement | null = null
     backgroundTileMap: BackgroundTileMap | null = null
 
     constructor(globalEntityMap: EntityMap, canvas: HTMLCanvasElement, playerId: string | null, mapSize: number[]) {
@@ -61,7 +61,7 @@ class MapDrawer {
         const ctx = this.ctx;
         ctx.clearRect(-canvas.width, -canvas.height, canvas.width * 2, canvas.height * 2)
         const promises: Promise<void>[] = []
-        this.drawGrid(ctx)
+        this.drawBackground()
         const sortedEntities = Object.values(this.entities).sort((a, b) => {
             // Smaller y is drawn first
             if (a.y < b.y) {
@@ -102,32 +102,6 @@ class MapDrawer {
         }
     }
 
-    async drawGrid(ctx: CanvasRenderingContext2D) {
-        // Draw a 32*32 grid starting at 0,0 to all directions
-
-        const { x: originX, y: originY } = this.convertCoordinates(this.mapSize[0], this.mapSize[1])
-        const { x: maxX, y: maxY } = this.convertCoordinates(this.mapSize[2], this.mapSize[3])
-
-        let x = originX;
-        let y = originY;
-
-        while (x <= maxX) {
-            // Draw vertical line
-            ctx.beginPath();
-            ctx.moveTo(x, -3000);
-            ctx.lineTo(x, 3000);
-            ctx.stroke();
-            x += 32;
-        }
-
-        while (y <= maxY) {
-            ctx.beginPath();
-            ctx.moveTo(-3000, y);
-            ctx.lineTo(3000, y);
-            ctx.stroke();
-            y += 32;
-        }
-    }
     async drawEntity(ctx: CanvasRenderingContext2D, entity: Entity) {
         // Draw sprite entity.url at entity.x and entity.y
         // ...
@@ -210,22 +184,79 @@ class MapDrawer {
         }
     }
 
-    setBackground(canvas: HTMLCanvasElement, backgroundTileMap: BackgroundTileMap) {
-        this.backgroundCanvas = canvas
+    setBackground(backgroundTileMap: BackgroundTileMap) {
         this.backgroundTileMap = backgroundTileMap
+        this.rebuildBackground();
     }
 
-    reDrawBackground() {
-        if (!this.backgroundCanvas || !this.backgroundTileMap) {
+    async rebuildBackground() {
+        if (!this.canvas || !this.backgroundTileMap) {
             return
         }
-        const ctx = this.backgroundCanvas.getContext('2d')
+        const invisibleCanvas = document.createElement('canvas')
+        invisibleCanvas.width = this.mapSize[2] - this.mapSize[0]
+        invisibleCanvas.height = this.mapSize[3] - this.mapSize[1]
+        const ctx = invisibleCanvas.getContext('2d')
         if (!ctx) {
             return
         }
-        ctx.clearRect(0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height)
-        // const { x: originX, y: originY } = this.convertCoordinates(0, 0)
+        
+        const originX = this.mapSize[0], originY = this.mapSize[1]
+        const maxX = this.mapSize[2], maxY = this.mapSize[3]
 
+        ctx.clearRect(originX, originY, maxX, maxY)
+
+        let x = originX;
+        let y = originY;
+
+        while (x <= maxX) {
+            // Draw vertical line
+            ctx.beginPath();
+            ctx.moveTo(x, -3000);
+            ctx.lineTo(x, 3000);
+            ctx.stroke();
+            x += 32;
+        }
+
+        while (y <= maxY) {
+            ctx.beginPath();
+            ctx.moveTo(-3000, y);
+            ctx.lineTo(3000, y);
+            ctx.stroke();
+            y += 32;
+        }
+
+        // Save the background canvas as this.backgroundImage (image objects)
+        const backgroundImage = new Image()
+        backgroundImage.src = invisibleCanvas.toDataURL()
+        await new Promise((resolve) => {
+            backgroundImage.onerror = () => {
+                resolve(null)
+            }
+            backgroundImage.onload = () => {
+                backgroundImage.decode().then(() => {
+                    this.backgroundImage = backgroundImage
+                    resolve(null)
+                }).catch((e) => {
+                    console.error(e)
+                    resolve(null)
+                });
+            }
+        })
+        this.backgroundImage = backgroundImage
+    }
+
+    drawBackground() {
+        if (!this.canvas || !this.backgroundImage) {
+            return
+        }
+        const ctx = this.canvas.getContext('2d')
+        if (!ctx) {
+            return
+        }
+        const { x, y } = this.convertCoordinates(0, 0)
+
+        ctx.drawImage(this.backgroundImage, x, y)
     }
 }
 
