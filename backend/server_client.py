@@ -23,7 +23,7 @@ sio.connect('http://localhost:5174/', socketio_path='/castcraft/socket.io')
 def on_entity_update(data):
     # Find the lowest action timeout
     global next_update
-    lowest_timeout = get_current_time() + 10000  # 10 seconds as a default
+    lowest_timeout = get_current_time() + 1000  # 1 seconds as a default
     for entity in data.get('changedEntities', {}).values():
         if entity.get('action') is None:
             continue
@@ -44,7 +44,7 @@ while True:
         except Exception as e:
             logger.error("Failed to request update: %s", e)
             continue
-        next_update = get_current_time() + 10000
+        next_update = get_current_time() + 1000
     else:
         pass
         # logger.info("Waiting for update: %s", next_update - get_current_time())
