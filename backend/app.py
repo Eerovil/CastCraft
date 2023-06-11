@@ -5,6 +5,7 @@ from flask import Flask, request, redirect
 from flask_socketio import SocketIO, emit
 from sqlitedict import SqliteDict
 from actions import update_actions, handle_player_touch
+from animals import move_animals, spawn_animals
 from utils import MAP_BOUNDS
 from entity_types.cozy_farm import get_grass
 from time_utils import get_current_time
@@ -110,6 +111,7 @@ def receive_select_item(data):
 def game_tick():
     changed_entities, deleted_entity_ids = [], []
     changed_entities += grow_nature()
+    changed_entities += move_animals()
     return changed_entities, deleted_entity_ids
 
 
@@ -154,5 +156,6 @@ if __name__ == '__main__':
     entities = get_entity_db()
     entities.clear()
     spawn_nature_things()
+    spawn_animals()
 
     socketio.run(app, debug=True, host="0.0.0.0", port=5174)

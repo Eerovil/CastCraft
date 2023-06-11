@@ -1,9 +1,9 @@
 import logging
 import random
-from utils import get_position_is_in_bounds
+from utils import get_random_free_position
 from entity_types.minecraft_things import MinecraftItem
 
-from db import get_entity_at_position, get_entity_db, get_free_entity_id, get_random_free_position, get_user_db
+from db import get_entity_db, get_free_entity_id, get_user_db
 from entity_types.cozy_character import CharacterChoice, CozyEntity, get_all_choices
 from models import Directions, Item, User, Inventory
 from time_utils import get_current_time

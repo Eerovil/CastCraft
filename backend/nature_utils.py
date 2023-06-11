@@ -2,7 +2,8 @@ import random
 from time_utils import get_current_time
 
 from entity_types.nature_things import TreeEntity, RockEntity
-from db import get_entity_db, get_free_entity_id, get_random_free_position
+from db import get_entity_db, get_free_entity_id
+from utils import get_random_free_position
 
 import logging
 logger = logging.getLogger(__name__)

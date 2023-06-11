@@ -7,7 +7,7 @@ from sqlitedict import SqliteDict
 
 from db import get_entity_at_position, get_entity_db, get_free_entity_id
 from user_utils import get_player_entity_from_request
-from utils import MAP_BOUNDS, TILE_SIZE, get_position_is_in_bounds
+from utils import MAP_BOUNDS, TILE_SIZE, get_position_is_in_bounds, move_coordinates_at_direction
 from models import ACTION_SLUGS, Action, Directions, Entity
 
 import logging
@@ -27,26 +27,6 @@ def fix_player_if_out_of_bounds(entity: Entity):
         entity.y = MAP_BOUNDS[3]
 
 
-def get_target_position_from_direction(direction, entity: Entity):
-    target_x = entity.x
-    target_y = entity.y
-
-    if direction == Directions.up:
-        target_y -= TILE_SIZE
-        entity.direction = Directions.up
-    elif direction == Directions.down:
-        target_y += TILE_SIZE
-        entity.direction = Directions.down
-    elif direction == Directions.left:
-        target_x -= TILE_SIZE
-        entity.direction = Directions.left
-    elif direction == Directions.right:
-        target_x += TILE_SIZE
-        entity.direction = Directions.right
-
-    return target_x, target_y
-
-
 def handle_player_touch(request, direction):
     """
     figure out what the input does
@@ -60,7 +40,8 @@ def handle_player_touch(request, direction):
         logger.info("Player entity not found")
         return [], []
 
-    target_x, target_y = get_target_position_from_direction(direction, player_entity)
+    target_x, target_y = move_coordinates_at_direction(player_entity.x, player_entity.y, direction)
+    player_entity.direction = direction
 
     blocking_entity = get_entity_at_position(target_x, target_y)
 
@@ -189,19 +170,8 @@ def handle_action_finished(entity: Entity, action: Action, entity_db: SqliteDict
     elif action.action == 'place':
         if entity.holding:
             block_type = entity.holding.slug
+            target_x, target_y = move_coordinates_at_direction(entity.x, entity.y, entity.direction)
 
-            if entity.direction == Directions.up:
-                target_x = entity.x
-                target_y = entity.y - TILE_SIZE
-            elif entity.direction == Directions.down:
-                target_x = entity.x
-                target_y = entity.y + TILE_SIZE
-            elif entity.direction == Directions.left:
-                target_x = entity.x - TILE_SIZE
-                target_y = entity.y
-            elif entity.direction == Directions.right:
-                target_x = entity.x + TILE_SIZE
-                target_y = entity.y
             new_block = PlacedMinecraftBlock(
                 id=get_free_entity_id(),
                 block_type=block_type.replace('_block', ''),

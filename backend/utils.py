@@ -1,7 +1,9 @@
 # Stuff that doesn't fit anywhere else
 
+import random
 from typing import Literal
-from models import TileSize
+from db import get_entity_at_position
+from models import Directions, TileSize
 
 
 MAP_BOUNDS = (2 * 32, 2 * 32, 57 * 32, 31 * 32)
@@ -43,3 +45,30 @@ def get_position_is_in_bounds(x, y, allow_edges=True):
             return False
 
     return True
+
+
+def coordinates_are_walkable(x, y):
+    if x is None or y is None:
+        return False
+    return get_position_is_in_bounds(x, y) and get_entity_at_position(x, y) is None
+
+
+def get_random_free_position(top_left_x, top_left_y, bottom_right_x, bottom_right_y, allow_edges=True):
+    x, y = None, None
+    while (not coordinates_are_walkable(x, y)):
+        x, y = random.randrange(top_left_x, bottom_right_x) * 32, random.randrange(top_left_y, bottom_right_y) * 32
+    return x, y
+
+
+def move_coordinates_at_direction(x, y, direction):
+    x = int(x)
+    y = int(y)
+    if direction == Directions.up:
+        y -= TILE_SIZE
+    elif direction == Directions.down:
+        y += TILE_SIZE
+    elif direction == Directions.left:
+        x -= TILE_SIZE
+    elif direction == Directions.right:
+        x += TILE_SIZE
+    return x, y
