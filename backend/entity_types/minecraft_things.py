@@ -6,7 +6,7 @@ from models import ACTION_SLUGS, Entity, Item, Sprite
 
 TILE_SIZE = 16
 
-BASE_URL = '/sprites/minecraft.png'
+BASE_URL = '/castcraft/sprites/minecraft.png'
 
 BlockType = Literal['wood', 'stone']
 

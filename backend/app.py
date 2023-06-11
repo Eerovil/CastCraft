@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.INFO)
 
-app = Flask(__name__, static_url_path='/', static_folder='../static/')
+app = Flask(__name__, static_url_path='/castcraft/', static_folder='../static/')
 
 app.config['SECRET_KEY'] = 'eero'
 socketio = SocketIO(app)
@@ -26,7 +26,7 @@ socketio = SocketIO(app)
 
 @app.route('/')
 def index():
-    return redirect('/index.html')
+    return redirect('/castcraft/index.html')
 
 
 @socketio.on('connected')

@@ -8,7 +8,7 @@ from utils import literal_to_list  # noqa
 from models import Sprite, Entity, Item
 
 
-BASE_URL = '/sprites/cozy_people/'
+BASE_URL = '/castcraft/sprites/cozy_people/'
 TILE_SIZE = 32  # 32*32 pixels tiled pngs
 CHAR_WIDTH = 8  # 8 tiles wide  (Also used for colors)
 TOOL_HEIGHT = 4  # 4 tiles of height for each tool (max of 8 * 4 = 32 sprites per tool)

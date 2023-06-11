@@ -4,7 +4,7 @@ from db import get_free_entity_id, get_entity_db
 from models import Entity, Sprite
 
 
-BASE_URL = '/sprites/nature_things/'
+BASE_URL = '/castcraft/sprites/nature_things/'
 TREE_TILE = (32, 32 + 16)
 
 
