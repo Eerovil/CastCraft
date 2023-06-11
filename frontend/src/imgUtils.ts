@@ -12,6 +12,9 @@ class ImgPreloader {
             img.onload = () => {
                 img.decode().then(() => {
                     resolve(null)
+                }).catch((err) => {
+                    console.log(err)
+                    resolve(null)
                 })
             }
             img.onerror = () => {
