@@ -65,7 +65,7 @@ def generate_player_entity():
 
     x, y = 0, 0
     while get_entity_at_position(x, y) is not None:
-        x, y = random.randrange(2, 15) * 32, random.randrange(2, 15) * 32
+        x, y = random.randrange(2, 8) * 32, random.randrange(2, 8) * 32
 
 
     player_entity = CozyEntity(
@@ -99,9 +99,6 @@ def generate_player_entity():
                     woodcutting=1,
                     mining=10,
                 ),
-                MinecraftItem(
-                    slug="wood_block",
-                )
             ]
         )
     )
