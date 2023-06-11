@@ -143,6 +143,8 @@ def handle_user_connected(request_sid, nickname):
 
     # Delete entities that have no nickname
     for entity in list(entity_db.values()):
+        if not isinstance(entity, CozyEntity):
+            continue
         if not entity.nickname:
             del entity_db[entity.id]
 
