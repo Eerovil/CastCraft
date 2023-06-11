@@ -126,8 +126,8 @@ def handle_user_connected(request_sid, nickname):
     user.request_id = request_sid
 
     entity = None
+    entity_db = get_entity_db()
     if nickname and nickname != 'TV':
-        entity_db = get_entity_db()
         entity = entity_db.get(user.entity_id)
         if entity is None:
             entity = generate_player_entity()
