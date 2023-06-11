@@ -10,7 +10,7 @@ from entity_types.cozy_farm import get_grass
 from time_utils import get_current_time
 from db import get_entity_db
 from user_utils import handle_user_connected
-from nature_utils import spawn_nature_things
+from nature_utils import grow_nature, spawn_nature_things
 from inventory import select_item
 from typing import List, Optional, Literal  # noqa
 
@@ -107,9 +107,18 @@ def receive_select_item(data):
     }, broadcast=True)
 
 
+def game_tick():
+    changed_entities, deleted_entity_ids = [], []
+    changed_entities += grow_nature()
+    return changed_entities, deleted_entity_ids
+
+
 @socketio.on('fetch_entity_update')
 def fetch_entity_update():
     changed_entities, deleted_entity_ids = update_actions()
+    changed_entities2, deleted_entity_ids2 = game_tick()
+    changed_entities += changed_entities2
+    deleted_entity_ids += deleted_entity_ids2
     if len(changed_entities) == 0:
         return
     emit('entity_update', {

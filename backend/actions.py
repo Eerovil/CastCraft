@@ -7,7 +7,7 @@ from sqlitedict import SqliteDict
 
 from db import get_entity_at_position, get_entity_db, get_free_entity_id
 from user_utils import get_player_entity_from_request
-from utils import MAP_BOUNDS, TILE_SIZE
+from utils import MAP_BOUNDS, TILE_SIZE, get_position_is_in_bounds
 from models import ACTION_SLUGS, Action, Directions, Entity
 
 import logging
@@ -25,19 +25,6 @@ def fix_player_if_out_of_bounds(entity: Entity):
         entity.y = MAP_BOUNDS[1]
     if entity.y > MAP_BOUNDS[3]:
         entity.y = MAP_BOUNDS[3]
-
-
-def get_position_is_in_bounds(x, y, entity: Entity):
-    if x < MAP_BOUNDS[0]:
-        return False
-    if x > MAP_BOUNDS[2]:
-        return False
-    if y < MAP_BOUNDS[1]:
-        return False
-    if y > MAP_BOUNDS[3]:
-        return False
-
-    return True
 
 
 def get_target_position_from_direction(direction, entity: Entity):

@@ -39,7 +39,11 @@ while True:
     time.sleep(40.0 / 1000.0)
     if get_current_time() >= next_update:
         logger.info("Requesting update")
-        sio.emit('fetch_entity_update')
+        try:
+            sio.emit('fetch_entity_update')
+        except Exception as e:
+            logger.error("Failed to request update: %s", e)
+            continue
         next_update = get_current_time() + 10000
     else:
         pass

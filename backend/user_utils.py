@@ -1,8 +1,9 @@
 import logging
 import random
+from utils import get_position_is_in_bounds
 from entity_types.minecraft_things import MinecraftItem
 
-from db import get_entity_at_position, get_entity_db, get_free_entity_id, get_user_db
+from db import get_entity_at_position, get_entity_db, get_free_entity_id, get_random_free_position, get_user_db
 from entity_types.cozy_character import CharacterChoice, CozyEntity, get_all_choices
 from models import Directions, Item, User, Inventory
 from time_utils import get_current_time
@@ -68,9 +69,7 @@ def get_random_character_choice():
 def generate_player_entity():
     _id = get_free_entity_id()
 
-    x, y = 0, 0
-    while get_entity_at_position(x, y) is not None:
-        x, y = random.randrange(2, 8) * 32, random.randrange(2, 8) * 32
+    x, y = get_random_free_position(0, 0, 100, 100)
 
 
     player_entity = CozyEntity(

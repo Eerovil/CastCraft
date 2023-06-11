@@ -32,6 +32,7 @@ class MapDrawer {
         if (!ctx) {
             throw new Error('Could not get canvas context')
         }
+        ctx.imageSmoothingEnabled = false;
         this.ctx = ctx
         if (isMobile) {
             // Find our player
@@ -197,14 +198,16 @@ class MapDrawer {
 
         const waterSize = 100 * 32;
 
-        invisibleCanvas.width = this.mapSize[2] - this.mapSize[0] + waterSize;
-        invisibleCanvas.height = this.mapSize[3] - this.mapSize[1] + waterSize;
+        invisibleCanvas.width = this.mapSize[2] + waterSize;
+        invisibleCanvas.height = this.mapSize[3] + waterSize;
         const ctx = invisibleCanvas.getContext('2d')
         if (!ctx) {
             return
         }
+        ctx.imageSmoothingEnabled = false;
         
-        const originX = this.mapSize[0], originY = this.mapSize[1]
+        const originX = 0, originY = 0
+        const minX = this.mapSize[0], minY = this.mapSize[1]
         const maxX = this.mapSize[2], maxY = this.mapSize[3]
 
         ctx.clearRect(originX, originY, maxX, maxY)
@@ -241,39 +244,39 @@ class MapDrawer {
 
         for (let x = originX - waterSize; x < maxX + waterSize; x += 32) {
             for (let y = originY - waterSize; y < maxY + waterSize; y += 32) {
-                if (x < originX || x > maxX - 32 || y < originY || y > maxY - 32) {
+                if (x < minX || x > maxX || y < minY || y > maxY) {
                     // Draw water
                     await drawSprite(x, y, tileMap.water)
                     continue
                 }
-                if (x == 0) {
+                if (x == minX) {
                     // Left side
-                    if (y == 0) {
+                    if (y == minY) {
                         // Top left
                         await drawSprite(x, y, tileMap.topLeft)
-                    } else if (y == maxY - 32) {
+                    } else if (y == maxY) {
                         // Bottom left
                         await drawSprite(x, y, tileMap.bottomLeft)
                     } else {
                         // Left
                         await drawSprite(x, y, tileMap.left)
                     }
-                } else if (x == maxX - 32) {
+                } else if (x == maxX) {
                     // Right side
-                    if (y == 0) {
+                    if (y == minY) {
                         // Top right
                         await drawSprite(x, y, tileMap.topRight)
-                    } else if (y == maxY - 32) {
+                    } else if (y == maxY) {
                         // Bottom right
                         await drawSprite(x, y, tileMap.bottomRight)
                     } else {
                         // Right
                         await drawSprite(x, y, tileMap.right)
                     }
-                } else if (y == 0) {
+                } else if (y == minY) {
                     // Top
                     await drawSprite(x, y, tileMap.top)
-                } else if (y == maxY - 32) {
+                } else if (y == maxY) {
                     // Bottom
                     await drawSprite(x, y, tileMap.bottom)
                 } else {
