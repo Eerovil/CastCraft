@@ -1,5 +1,5 @@
 // @ts-ignore
-import Entity from './apiTypes'
+import Entity, { Sprite } from './apiTypes'
 import { getImg } from './imgUtils'
 import { BackgroundTileMap, EntityMap } from './moreTypes'
 import { getCurrentTime } from './timeUtils'
@@ -206,24 +206,77 @@ class MapDrawer {
 
         ctx.clearRect(originX, originY, maxX, maxY)
 
-        let x = originX;
-        let y = originY;
-
-        while (x <= maxX) {
-            // Draw vertical line
-            ctx.beginPath();
-            ctx.moveTo(x, -3000);
-            ctx.lineTo(x, 3000);
-            ctx.stroke();
-            x += 32;
+        interface TileMap {
+            topLeft: Sprite,
+            top: Sprite,
+            topRight: Sprite,
+            left: Sprite,
+            center: Sprite,
+            right: Sprite,
+            bottomLeft: Sprite,
+            bottom: Sprite,
+            bottomRight: Sprite,
+            extra1: Sprite,
+            extra2: Sprite,
+            extra3: Sprite,
+            extra4: Sprite,
+            extra5: Sprite,
+            extra6: Sprite,
+            extra7: Sprite,
         }
 
-        while (y <= maxY) {
-            ctx.beginPath();
-            ctx.moveTo(-3000, y);
-            ctx.lineTo(3000, y);
-            ctx.stroke();
-            y += 32;
+        const tileMap: TileMap = this.backgroundTileMap.grass as any;
+
+        const drawSprite = async (x: number, y: number, sprite: Sprite) => {
+            ctx.drawImage(
+                await getImg(sprite.url),
+                sprite.x, sprite.y, sprite.width, sprite.height,
+                x, y, 32, 32
+            );
+        }
+
+        for (let x = originX; x < maxX; x += 32) {
+            for (let y = originY; y < maxY; y += 32) {
+                if (x == 0) {
+                    // Left side
+                    if (y == 0) {
+                        // Top left
+                        await drawSprite(x, y, tileMap.topLeft)
+                    } else if (y == maxY - 32) {
+                        // Bottom left
+                        await drawSprite(x, y, tileMap.bottomLeft)
+                    } else {
+                        // Left
+                        await drawSprite(x, y, tileMap.left)
+                    }
+                } else if (x == maxX - 32) {
+                    // Right side
+                    if (y == 0) {
+                        // Top right
+                        await drawSprite(x, y, tileMap.topRight)
+                    } else if (y == maxY - 32) {
+                        // Bottom right
+                        await drawSprite(x, y, tileMap.bottomRight)
+                    } else {
+                        // Right
+                        await drawSprite(x, y, tileMap.right)
+                    }
+                } else if (y == 0) {
+                    // Top
+                    await drawSprite(x, y, tileMap.top)
+                } else if (y == maxY - 32) {
+                    // Bottom
+                    await drawSprite(x, y, tileMap.bottom)
+                } else {
+                    // Center
+                    await drawSprite(x, y, tileMap.center)
+                }
+                if (Math.random() < 0.2) {
+                    // Draw a random sprite extra1, extra2, extra3
+                    const sprite = tileMap[`extra${Math.floor(Math.random() * 6) + 1}`]
+                    await drawSprite(x, y, sprite)
+                }
+            }
         }
 
         // Save the background canvas as this.backgroundImage (image objects)

@@ -4,7 +4,7 @@ from models import Sprite
 GRASS_TILE = 16
 
 
-BASE_URL = 'castcraft/sprites/cozy_farm/global.png'
+BASE_URL = 'sprites/cozy_farm/global.png'
 
 
 class CozyFarmSprite(Sprite):
@@ -19,7 +19,7 @@ class GrassSprite(CozyFarmSprite):
 
 def get_grass():
     return {
-        'top-left': GrassSprite(
+        'topLeft': GrassSprite(
             x=0 * GRASS_TILE,
             y=12 * GRASS_TILE,
         ),
@@ -27,7 +27,7 @@ def get_grass():
             x=1 * GRASS_TILE,
             y=12 * GRASS_TILE,
         ),
-        'top-right': GrassSprite(
+        'topRight': GrassSprite(
             x=2 * GRASS_TILE,
             y=12 * GRASS_TILE,
         ),
@@ -43,7 +43,7 @@ def get_grass():
             x=2 * GRASS_TILE,
             y=13 * GRASS_TILE,
         ),
-        'bottom-left': GrassSprite(
+        'bottomLeft': GrassSprite(
             x=0 * GRASS_TILE,
             y=14 * GRASS_TILE,
         ),
@@ -51,7 +51,7 @@ def get_grass():
             x=1 * GRASS_TILE,
             y=14 * GRASS_TILE,
         ),
-        'bottom-right': GrassSprite(
+        'bottomRight': GrassSprite(
             x=2 * GRASS_TILE,
             y=14 * GRASS_TILE,
         ),
