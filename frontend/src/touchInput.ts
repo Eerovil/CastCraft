@@ -37,7 +37,7 @@ class TouchInput {
 
         console.log('xDiff', xDiff, 'yDiff', yDiff);
 
-        if (Math.abs(xDiff) > 32 && Math.abs(yDiff) > 32) {
+        if ((xDiff < -60 || xDiff > 30) && (yDiff < -60 || yDiff > 30)) {
             // Too far away in the diagonal direction
             return;
         }

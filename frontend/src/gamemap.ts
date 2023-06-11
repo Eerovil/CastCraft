@@ -73,6 +73,9 @@ class MapDrawer {
             }
             return 0;
         })
+        if (this.playerId) {
+            this.drawTouchAreas()
+        }
         for (const entity of sortedEntities) {
             promises.push(this.drawEntity(ctx, entity))
         }
@@ -84,6 +87,39 @@ class MapDrawer {
                 })
             }, 40)
         })
+    }
+
+    drawTouchAreas() {
+        const ctx = this.ctx;
+        const player = this.entities[this.playerId!]
+        if (!player) {
+            return
+        }
+        // Draw a square above, below, left, and right of the player
+        const touchAreaSize = 32
+        const touchAreaColor = 'rgba(255, 0, 0, 0.5)'
+        
+        ctx.fillStyle = touchAreaColor
+        const drawRect = (x: number, y: number) => {
+            const { x: newX, y: newY } = this.convertCoordinates(x, y)
+            
+            ctx.strokeStyle = 'green';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(newX, newY, touchAreaSize, touchAreaSize);
+        }
+
+        let x = player.x
+        let y = player.y
+
+        if (player.x_from != undefined && player.y_from != undefined) {
+            x = player.x_from
+            y = player.y_from
+        }
+
+        drawRect(x - touchAreaSize, y)
+        drawRect(x + touchAreaSize, y)
+        drawRect(x, y - touchAreaSize)
+        drawRect(x, y + touchAreaSize)
     }
 
     convertCoordinates(x: number, y: number) {
