@@ -27,7 +27,10 @@ class socketUtils {
     constructor(props: socketUtilsProps) {
         this.entities = props.entities
         this.nickname = props.nickname
-        this.socket = io(URL, {path: "/castcraft/socket.io"});
+        this.socket = io(URL, {
+            path: "/castcraft/socket.io",
+            forceNew: true,
+        });
         window.onunload = () => {
             this.socket.close();
         }
