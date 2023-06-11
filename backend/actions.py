@@ -83,9 +83,10 @@ def handle_player_touch(request, direction):
 
             player_entity.start_moving(target_x, target_y)
             if player_entity.carrying_entity_id:
+                player_entity.holding = None
                 logger.info(f"Player is carrying {player_entity.carrying_entity_id}")
                 carried_entity = entity_db[player_entity.carrying_entity_id]
-                carried_entity.start_moving(target_x, target_y - 20)
+                carried_entity.start_moving(target_x, target_y - 30)
                 entity_db[carried_entity.id] = carried_entity
                 changed_entities.append(carried_entity)
         elif action == "swing":
@@ -126,7 +127,8 @@ def handle_player_touch(request, direction):
                 time=500,
                 timeout=get_current_time() + 500,
             )
-            blocking_entity.start_moving(player_entity.x, player_entity.y - 20)
+            player_entity.holding = None
+            blocking_entity.start_moving(player_entity.x, player_entity.y - 30)
             blocking_entity.carried_by_entity_id = player_entity.id
             entity_db[blocking_entity.id] = blocking_entity
             changed_entities.append(blocking_entity)

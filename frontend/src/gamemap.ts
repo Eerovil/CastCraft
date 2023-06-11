@@ -4,6 +4,10 @@ import { getImg } from './imgUtils'
 import { BackgroundTileMap, EntityMap } from './moreTypes'
 import { getCurrentTime } from './timeUtils'
 
+function sortBy(arr: Array<any>, callback: (item: any) => number) {
+    return arr.sort((a: any, b: any) => callback(a) - callback(b))
+}
+
 class MapDrawer {
     entities: EntityMap
     canvas: HTMLCanvasElement
@@ -57,27 +61,21 @@ class MapDrawer {
         }
     }
 
-    redrawAllEntities() {
+    async redrawAllEntities() {
         const canvas = this.canvas;
         const ctx = this.ctx;
         ctx.clearRect(-canvas.width, -canvas.height, canvas.width * 2, canvas.height * 2)
         const promises: Promise<void>[] = []
         this.drawBackground()
-        const sortedEntities = Object.values(this.entities).sort((a, b) => {
-            // Smaller y is drawn first
-            if (a.y < b.y) {
-                return -1
-            }
-            if (a.y > b.y) {
-                return 1
-            }
-            return 0;
-        })
+        const sortedEntities = sortBy(
+            sortBy(Object.values(this.entities), (entity) => entity.y),
+            (entity) => entity.carried_by_entity_id ? 1 : -1,
+        )
         if (this.playerId) {
             this.drawTouchAreas()
         }
         for (const entity of sortedEntities) {
-            promises.push(this.drawEntity(ctx, entity))
+            await this.drawEntity(ctx, entity)
         }
         Promise.all(promises).then(() => {
             setTimeout(() => {
@@ -98,11 +96,11 @@ class MapDrawer {
         // Draw a square above, below, left, and right of the player
         const touchAreaSize = 32
         const touchAreaColor = 'rgba(255, 0, 0, 0.5)'
-        
+
         ctx.fillStyle = touchAreaColor
         const drawRect = (x: number, y: number) => {
             const { x: newX, y: newY } = this.convertCoordinates(x, y)
-            
+
             ctx.strokeStyle = 'green';
             ctx.lineWidth = 1;
             ctx.strokeRect(newX, newY, touchAreaSize, touchAreaSize);
@@ -241,7 +239,7 @@ class MapDrawer {
             return
         }
         ctx.imageSmoothingEnabled = false;
-        
+
         const originX = 0, originY = 0
         const minX = this.mapSize[0], minY = this.mapSize[1]
         const maxX = this.mapSize[2], maxY = this.mapSize[3]

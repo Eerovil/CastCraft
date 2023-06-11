@@ -371,6 +371,9 @@ class CozyEntity(Entity):
         else:
             tool = self.get_idle_tool() or "walk"
 
+        if self.carrying_entity_id and tool == "walk":
+            tool = "carry"
+
         sprites = get_tiles_for(self.choice, tool=tool, direction=self.direction)
         self.sprites = sprites
 
