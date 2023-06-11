@@ -7,7 +7,7 @@ from sqlitedict import SqliteDict
 
 from db import get_entity_at_position, get_entity_db, get_free_entity_id
 from user_utils import get_player_entity_from_request
-from utils import MAP_BOUNDS, TILE_SIZE, get_position_is_in_bounds, move_coordinates_at_direction
+from utils import MAP_BOUNDS, TILE_SIZE, coordinates_are_walkable, get_position_is_in_bounds, move_coordinates_at_direction
 from models import ACTION_SLUGS, Action, Directions, Entity
 
 import logging
@@ -35,10 +35,11 @@ def handle_player_touch(request, direction):
     """
     player_entity = get_player_entity_from_request(request)
     entity_db = get_entity_db()
+    changed_entities = []
 
     if not player_entity:
         logger.info("Player entity not found")
-        return [], []
+        return [], changed_entities
 
     target_x, target_y = move_coordinates_at_direction(player_entity.x, player_entity.y, direction)
     player_entity.direction = direction
@@ -64,32 +65,29 @@ def handle_player_touch(request, direction):
     if player_entity.action is not None:
         if player_entity.action.action == "action":
             # Probably clicked again, just return nothing
-            return [], []
+            return [], changed_entities
         logger.info("Player is already doing something: %s", player_entity.action)
 
         if player_entity.action.action == 'move':
-            return [], []
+            return [], changed_entities
 
         # Cancel the current action
         player_entity.action = None
         player_entity.update_sprites()
         entity_db[player_entity.id] = player_entity
-        return [], [player_entity]
+        return [], changed_entities + [player_entity]
 
     if action:
         if action == "move":
             logger.info(f"Player started moving from {player_entity.x} to direction {direction}")
 
-            player_entity.x_from = player_entity.x
-            player_entity.y_from = player_entity.y
-            player_entity.x = target_x
-            player_entity.y = target_y
-
-            player_entity.action = Action(
-                action='move',
-                time=1000,
-                timeout=get_current_time() + 1000
-            )
+            player_entity.start_moving(target_x, target_y)
+            if player_entity.carrying_entity_id:
+                logger.info(f"Player is carrying {player_entity.carrying_entity_id}")
+                carried_entity = entity_db[player_entity.carrying_entity_id]
+                carried_entity.start_moving(target_x, target_y - 20)
+                entity_db[carried_entity.id] = carried_entity
+                changed_entities.append(carried_entity)
         elif action == "swing":
             base_time = 10000
             efficiency = 1
@@ -120,14 +118,24 @@ def handle_player_touch(request, direction):
                 time=500,
                 timeout=get_current_time() + 500,
             )
-
-
+        elif action == "pick_up":
+            logger.info(f"Player started pick_up")
+            player_entity.action = Action(
+                target_id=blocking_entity.id,
+                action='pick_up',
+                time=500,
+                timeout=get_current_time() + 500,
+            )
+            blocking_entity.start_moving(player_entity.x, player_entity.y - 20)
+            blocking_entity.carried_by_entity_id = player_entity.id
+            entity_db[blocking_entity.id] = blocking_entity
+            changed_entities.append(blocking_entity)
 
     player_entity.update_sprites()
 
     entity_db[player_entity.id] = player_entity
 
-    return [], [player_entity]
+    return [], changed_entities + [player_entity]
 
 
 def handle_action_finished(entity: Entity, action: Action, entity_db: SqliteDict) -> tuple[list[Entity], list[str]]:
@@ -135,13 +143,17 @@ def handle_action_finished(entity: Entity, action: Action, entity_db: SqliteDict
     deleted_entity_ids = []
     if not action:
         return changed_entities, deleted_entity_ids
-    logger.info(f"Action finished: {action}")
+    logger.info(f"Action finished: {action.action}, {action.target_id}")
     if action.action == 'move':
-        entity.x_from = entity.x
-        entity.y_from = entity.y
-        entity.action = None
+        entity.finish_moving()
         entity.update_sprites()
         entity_db[entity.id] = entity
+        if entity.carrying_entity_id:
+            carried_entity = entity_db[entity.carrying_entity_id]
+            carried_entity.finish_moving()
+            carried_entity.update_sprites()
+            entity_db[carried_entity.id] = carried_entity
+            changed_entities.append(carried_entity)
     elif action.action == 'swing':
         target_entity = entity_db[action.target_id]
         changed_entities = target_entity.on_swing_destroy()
@@ -197,6 +209,20 @@ def handle_action_finished(entity: Entity, action: Action, entity_db: SqliteDict
             entity.action = None
             entity.update_sprites()
             entity_db[entity.id] = entity
+    elif action.action == "pick_up":
+        entity.carrying_entity_id = action.target_id
+        entity.action = None
+        entity.update_sprites()
+        entity_db[entity.id] = entity
+        logger.info("Player finished pick_up, is now carrying entity %s", action.target_id)
+
+        target_entity: Entity = entity_db[action.target_id]
+        target_entity.finish_moving()
+        target_entity.carried_by_entity_id = entity.id
+        target_entity.action = None
+        target_entity.update_sprites()
+        entity_db[target_entity.id] = target_entity
+        changed_entities.append(target_entity)
     else:
         entity.action = None
         entity.update_sprites()
@@ -230,3 +256,29 @@ def update_actions() -> tuple[list[Entity], list[str]]:
         deleted_entity_ids.extend(handle_result[1])
 
     return changed_entities, deleted_entity_ids
+
+
+def handle_player_action(request_sid):
+    player_entity = get_player_entity_from_request(request_sid)
+    if not player_entity:
+        return [], []
+    entity_db = get_entity_db()
+    changed_entities = []
+    deleted_entity_ids = []
+
+    if player_entity.carrying_entity_id:
+        carried_entity = entity_db[player_entity.carrying_entity_id]
+        target_x, target_y = move_coordinates_at_direction(player_entity.x, player_entity.y, player_entity.direction)
+        if coordinates_are_walkable(target_x, target_y):
+            carried_entity.start_moving(target_x, target_y)
+            carried_entity.carried_by_entity_id = None
+            carried_entity.update_sprites()
+            entity_db[carried_entity.id] = carried_entity
+            changed_entities.append(carried_entity)
+
+            player_entity.carrying_entity_id = None
+            player_entity.update_sprites()
+            entity_db[player_entity.id] = player_entity
+            changed_entities.append(player_entity)
+
+    return deleted_entity_ids, changed_entities

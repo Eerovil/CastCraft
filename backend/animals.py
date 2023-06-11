@@ -32,6 +32,8 @@ def move_animals():
     for entity in list(get_entity_db().values()):
         if not isinstance(entity, Animal):
             continue
+        if entity.carried_by_entity_id:
+            continue
         if current_time > entity.last_update + 5000:
             entity.last_update = current_time + random.randint(-1000, 1000)
             if random.randint(0, 1) == 0:
@@ -56,7 +58,8 @@ def move_animals():
 
 
 def spawn_animals():
-    chicken = spawn_animal("chicken", "chicken animation")
-    brown_chicken = spawn_animal("chicken", "chicken_brown animation")
+    for i in range(20):
+        chicken = spawn_animal("chicken", "chicken animation")
+        brown_chicken = spawn_animal("chicken", "chicken_brown animation")
 
     return [chicken, brown_chicken]

@@ -1,6 +1,8 @@
 from pydantic import BaseModel
 from typing import List, Optional, Literal
 
+from time_utils import get_current_time
+
 try:
     from items_static import ITEM_SLUGS  # noqa
 except ImportError:
@@ -100,6 +102,9 @@ class Entity(BaseModel):
 
     holding: Optional[Item] = None
 
+    carrying_entity_id: Optional[str] = None
+    carried_by_entity_id: Optional[str] = None
+
     # What happens when user tries to walk into this entity
     on_touch: Optional[ACTION_SLUGS] = None
 
@@ -110,6 +115,23 @@ class Entity(BaseModel):
 
     def on_swing_destroy(self):
         return
+
+    def start_moving(self, target_x, target_y):
+        self.x_from = self.x
+        self.y_from = self.y
+        self.x = target_x
+        self.y = target_y
+
+        self.action = Action(
+            action='move',
+            time=1000,
+            timeout=get_current_time() + 1000
+        )
+
+    def finish_moving(self):
+        self.x_from = self.x
+        self.y_from = self.y
+        self.action = None
 
 
 class User(BaseModel):

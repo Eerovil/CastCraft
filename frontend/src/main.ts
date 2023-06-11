@@ -112,6 +112,10 @@ async function main() {
     tapNextToPlayer: (direction: number) => {
       console.log('tapNextToPlayer', direction)
       socketHandler.movePlayer(direction)
+    },
+    tapOnPlayer: () => {
+      console.log('tapOnPlayer')
+      socketHandler.playerAction()
     }
   }
   startTouchInput(touchElement, touchCallbacks)

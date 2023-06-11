@@ -1,5 +1,6 @@
 interface TouchCallbacks {
-    tapNextToPlayer?: (direction: number) => void
+    tapNextToPlayer?: (direction: number) => void,
+    tapOnPlayer?: () => void,
 }
 
 class TouchInput {
@@ -41,6 +42,13 @@ class TouchInput {
             // Too far away in the diagonal direction
             return;
         }
+
+        if ((-60 < yDiff && yDiff < 20) && (-40 < xDiff && xDiff < 40)) {
+            // Tapped center
+            this.callbacks.tapOnPlayer && this.callbacks.tapOnPlayer();
+            return;
+        }
+
 
         // DirectionsType.down is 0
         // DirectionsType.up is 1

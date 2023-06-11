@@ -4,7 +4,7 @@
 from flask import Flask, request, redirect
 from flask_socketio import SocketIO, emit
 from sqlitedict import SqliteDict
-from actions import update_actions, handle_player_touch
+from actions import handle_player_action, update_actions, handle_player_touch
 from animals import move_animals, spawn_animals
 from utils import MAP_BOUNDS
 from entity_types.cozy_farm import get_grass
@@ -106,6 +106,23 @@ def receive_select_item(data):
             entity.id: entity.dict() for entity in changed_entities
         }
     }, broadcast=True)
+
+
+@socketio.on('playerAction')
+def receive_player_action(data):
+    """
+    User tapped on player
+    """
+    deleted_entity_ids, changed_entities = handle_player_action(request.sid)
+    if len(deleted_entity_ids) == 0 and len(changed_entities) == 0:
+        return
+    emit('entity_update', {
+        'deletedEntityIds': deleted_entity_ids,
+        'changedEntities': {
+            entity.id: entity.dict() for entity in changed_entities
+        }
+    }, broadcast=True)
+
 
 
 def game_tick():

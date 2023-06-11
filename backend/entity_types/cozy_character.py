@@ -365,6 +365,9 @@ class CozyEntity(Entity):
             elif self.action.action == 'place':
                 tool = "pickup"
                 self.animation_speed = 2
+            elif self.action.action == 'pick_up':
+                tool = "pickup"
+                self.animation_speed = 2
         else:
             tool = self.get_idle_tool() or "walk"
 

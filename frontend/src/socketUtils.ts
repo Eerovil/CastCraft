@@ -125,9 +125,11 @@ class socketUtils {
         // User selects an item to holding
         this.socket.emit('selectItem', {
             item: item
-        }, (data: PartialDump) => {
-            console.log("selectItem: ", data);
         });
+    }
+
+    playerAction() {
+        this.socket.emit('playerAction', {});
     }
 }
 
