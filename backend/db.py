@@ -2,6 +2,9 @@ from sqlitedict import SqliteDict
 
 from models import Entity
 
+from typing import Optional
+
+
 def get_entity_db():
     return SqliteDict('entities.db', tablename="entities", autocommit=True)
 
@@ -10,7 +13,7 @@ def get_user_db():
     return SqliteDict('nicknames.db', tablename="nicknames", autocommit=True)
 
 
-def get_entity_at_position(x, y) -> Entity | None:
+def get_entity_at_position(x, y) -> Optional[Entity]:
     entity_db = get_entity_db()
     for entity in entity_db.values():
         if not entity:

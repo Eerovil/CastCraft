@@ -6,6 +6,10 @@ from db import get_entity_at_position, get_entity_db, get_free_entity_id, get_us
 from entity_types.cozy_character import CharacterChoice, CozyEntity, get_all_choices
 from models import Directions, Item, User, Inventory
 from time_utils import get_current_time
+
+from typing import Optional
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -16,7 +20,7 @@ def get_user_from_request(request_sid):
             return user
 
 
-def get_player_entity_from_request(request_sid) -> CozyEntity | None:
+def get_player_entity_from_request(request_sid) -> Optional[CozyEntity]:
     user = get_user_from_request(request_sid)
     if user is None:
         return None
