@@ -41,7 +41,7 @@ def conn(data):
     print("Connected")
     nickname = data.get("nickname")
     if nickname is None:
-        return
+        return build_full_entity_dump()
 
     player_entity = handle_user_connected(request.sid, nickname)
 

@@ -27,12 +27,16 @@ class socketUtils {
     constructor(props: socketUtilsProps) {
         this.entities = props.entities
         this.nickname = props.nickname
-        this.socket = io(URL, {
-            path: "/castcraft/socket.io",
-            forceNew: true,
-            retries: 10,
-            ackTimeout: 1000
-        });
+        try {
+            this.socket = io(URL, {
+                path: "/castcraft/socket.io",
+                forceNew: true,
+                retries: 10,
+                ackTimeout: 1000
+            });
+        } catch (e) {
+            console.log("Error: ", e);
+        }
         window.onunload = () => {
             this.socket.close();
         }
