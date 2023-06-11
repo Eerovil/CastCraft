@@ -28,9 +28,9 @@ class socketUtils {
         this.entities = props.entities
         this.nickname = props.nickname
         this.socket = io(URL, {path: "/castcraft/socket.io"});
-        this.socket.on("connect", () => {
-            console.log(this.socket.id); // x8WIv7-mJelg7on_ALbx
-        });
+        window.onunload = () => {
+            this.socket.close();
+        }
     }
 
     setEntities(entities: EntityMap) {
