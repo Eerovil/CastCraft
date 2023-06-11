@@ -14,6 +14,9 @@ class ImgPreloader {
                     resolve(null)
                 })
             }
+            img.onerror = () => {
+                resolve(null)
+            }
         })
         this.preloadedImages[url] = img
         return img
