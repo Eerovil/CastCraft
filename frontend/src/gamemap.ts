@@ -176,11 +176,15 @@ class MapDrawer {
 
         for (const sprite of sprites) {
             const img = await getImg(sprite.url)
-            ctx.drawImage(
-                img,
-                sprite.x, sprite.y, sprite.width, sprite.height,
-                x + entity.x_offset, y + entity.y_offset, entity.width, entity.height
-            );
+            try {
+                ctx.drawImage(
+                    img,
+                    sprite.x, sprite.y, sprite.width, sprite.height,
+                    x + entity.x_offset, y + entity.y_offset, entity.width, entity.height
+                );
+            } catch (e) {
+                console.error(e)
+            }
             (window as any).spritesDrawn += 1
         }
         // Draw a dot at the x/y of the entity

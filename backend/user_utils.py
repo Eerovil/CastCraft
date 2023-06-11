@@ -132,13 +132,19 @@ def handle_user_connected(request_sid, nickname):
         if entity is None:
             entity = generate_player_entity()
         if entity.nickname != nickname:
+            del entity_db[entity.id]
             entity = generate_player_entity()
         elif not isinstance(entity, CozyEntity):
-            entity_db.pop(entity.id)
+            del entity_db[entity.id]
             entity = generate_player_entity()
         entity.nickname = nickname
         entity_db[entity.id] = entity
         user.entity_id = entity.id
+
+    # Delete entities that have no nickname
+    for entity in list(entity_db.values()):
+        if not entity.nickname:
+            del entity_db[entity.id]
 
     user_db[nickname] = user
     return entity
