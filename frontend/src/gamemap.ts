@@ -136,7 +136,13 @@ class MapDrawer {
             if (actionFullTime > 0) {
                 const timeLeft = actionTimeout - currentTime;
                 const timeSpent = actionFullTime - timeLeft;
-                const percent = timeSpent / actionFullTime;
+                let percent = timeSpent / actionFullTime;
+                if (percent > 1) {
+                    percent = 1;
+                }
+                if (percent < 0) {
+                    percent = 0;
+                }
                 if (percent != Infinity) {
                     const x_from = entity.x_from
                     const y_from = entity.y_from

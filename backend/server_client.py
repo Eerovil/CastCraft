@@ -25,7 +25,6 @@ def on_entity_update(data):
     global next_update
     lowest_timeout = get_current_time() + 10000  # 10 seconds as a default
     for entity in data.get('changedEntities', {}).values():
-        logger.info(f"Entity: {entity}")
         if entity.get('action') is None:
             continue
         if entity['action']['timeout'] < lowest_timeout:
