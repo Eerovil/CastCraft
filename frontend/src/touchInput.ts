@@ -30,10 +30,17 @@ class TouchInput {
         const height = window.innerHeight;
 
         const xCenter = width / 2;
-        const yCenter = height / 2;
+        const yCenter = height / 2 - 32;
 
         const xDiff = x - xCenter;
         const yDiff = y - yCenter;
+
+        console.log('xDiff', xDiff, 'yDiff', yDiff);
+
+        if (Math.abs(xDiff) > 32 && Math.abs(yDiff) > 32) {
+            // Too far away in the diagonal direction
+            return;
+        }
 
         // DirectionsType.down is 0
         // DirectionsType.up is 1
