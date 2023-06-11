@@ -35,7 +35,7 @@ def move_animals():
         if entity.carried_by_entity_id:
             continue
         if current_time > entity.last_update + 5000:
-            entity.last_update = current_time + random.randint(-1000, 1000)
+            entity.last_update = current_time + random.randint(-5000, 5000)
             if random.randint(0, 1) == 0:
                 # Start a walk action to a random direction
                 entity.direction = random.randint(0, 3)
@@ -58,7 +58,7 @@ def move_animals():
 
 
 def spawn_animals():
-    for i in range(20):
+    for i in range(8):
         chicken = spawn_animal("chicken", "chicken animation")
         brown_chicken = spawn_animal("chicken", "chicken_brown animation")
 
