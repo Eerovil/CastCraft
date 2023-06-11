@@ -187,10 +187,11 @@ class MapDrawer {
 
         if (this.playerId) {
             // If x and y are not visible, don't draw them
-            if (x < -50 || x > window.innerWidth + 50) {
-                return
-            }
-            if (y < -50 || y > window.innerHeight + 50) {
+            if (x < -50 || x > window.innerWidth + 50 || y < -50 || y > window.innerHeight + 50) {
+                for (const sprite of sprites) {
+                    // Still, we need to load the image for later
+                    getImg(sprite.url)
+                }
                 return
             }
         }
