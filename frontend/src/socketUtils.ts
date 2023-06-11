@@ -8,7 +8,6 @@ import { Item } from "./apiTypes";
 
 const URL = window.location.protocol + "//" + window.location.host;
 console.log("URL: ", URL);
-export const socket = io(URL, {path: "/castcraft/socket.io"});
 
 interface socketUtilsProps {
     entities: EntityMap,
@@ -23,12 +22,14 @@ class socketUtils {
     entities: EntityMap
     actionCheckTimeout: NodeJS.Timeout | null = null
     nickname: string
+    socket: any
 
     constructor(props: socketUtilsProps) {
         this.entities = props.entities
         this.nickname = props.nickname
-        socket.on("connect", () => {
-            console.log(socket.id); // x8WIv7-mJelg7on_ALbx
+        this.socket = io(URL, {path: "/castcraft/socket.io"});
+        this.socket.on("connect", () => {
+            console.log(this.socket.id); // x8WIv7-mJelg7on_ALbx
         });
     }
 
@@ -38,7 +39,7 @@ class socketUtils {
     }
 
     fetchEntityUpdate() {
-        socket.emit("fetch_entity_update");
+        this.socket.emit("fetch_entity_update");
     }
 
     handleEntityActionCheck() {
@@ -82,14 +83,14 @@ class socketUtils {
     }
 
     afterFirstConnect() {
-        socket.on('entity_update', (data: PartialDump) => {
+        this.socket.on('entity_update', (data: PartialDump) => {
             console.log("entity_update: ", data);
             this.handleEntityUpdate(data);
         });
-        socket.on('disconnect', () => {
+        this.socket.on('disconnect', () => {
             // After a disconnect, we want to reload the page
             // after reconnecting
-            socket.on('connect', () => {
+            this.socket.on('connect', () => {
                 window.location.reload();
             });
         });
@@ -97,15 +98,15 @@ class socketUtils {
 
     waitUntilConnected() {
         return new Promise((resolve) => {
-            socket.on('connect', () => {
-                socket.emit('connected', {
+            this.socket.on('connect', () => {
+                this.socket.emit('connected', {
                     'nickname': this.nickname,
                 }, (data: FullDump) => {
                     console.log("connected: ", data);
                     this.setEntities(data.entities);
                     this.afterFirstConnect();
                     const pingStart = getCurrentTime();
-                    socket.emit('ping', {}, (data: ServerTimeData) => {
+                    this.socket.emit('ping', {}, (data: ServerTimeData) => {
                         const pingEnd = getCurrentTime();
                         const serverTime = data.serverTime;
                         const currentServerTime = serverTime + (pingEnd - pingStart) / 2;
@@ -118,7 +119,7 @@ class socketUtils {
     }
 
     movePlayer(direction: number) {
-        socket.emit('movePlayer', {
+        this.socket.emit('movePlayer', {
             direction: direction
         }, (data: PartialDump) => {
             console.log("movePlayer: ", data);
@@ -127,7 +128,7 @@ class socketUtils {
 
     selectItem(item: Item) {
         // User selects an item to holding
-        socket.emit('selectItem', {
+        this.socket.emit('selectItem', {
             item: item
         }, (data: PartialDump) => {
             console.log("selectItem: ", data);
