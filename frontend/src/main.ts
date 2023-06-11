@@ -1,10 +1,10 @@
 import './style.css' // @ts-ignore
 import { drawGameMap } from './gamemap.ts'  // @ts-ignore
 import { initNetwork } from './socketUtils.ts'
-import { EntityMap } from './moreTypes'
+import { BackgroundTileMap, EntityMap } from './moreTypes'
 import { startTouchInput } from './touchInput'
 import { initializeInventory } from './inventory.ts'
-import { Item } from './apiTypes.ts'
+import { Item, Sprite } from './apiTypes.ts'
 import * as Sentry from "@sentry/browser";
 import { initializeTopBar } from './topBar.ts'
 
@@ -28,6 +28,7 @@ Sentry.init({
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
+    <canvas id="game-map-background"></canvas>
     <canvas id="game-map"></canvas>
     <div id="touch-element"></div>
     <div id="inventory"></div>
@@ -67,10 +68,29 @@ async function main() {
   setQueryParam('nickname', nickname);
   (window as any).nickname = nickname
 
+  let backgroundTileMap: BackgroundTileMap;
+  let mapSize: number[];
   const socketHandler = await initNetwork({
     entities: globalEntityMap,
+    fullDumpCallback: (data) => {
+      backgroundTileMap = data.background
+      mapSize = data.mapSize
+    },
     nickname: nickname,
   })
+
+  await new Promise((resolve) => {
+    const mapSizeIsSet = () => {
+      if (mapSize) {
+        resolve(null)
+      } else {
+        setTimeout(mapSizeIsSet, 100)
+      }
+    }
+    mapSizeIsSet()
+  })
+  mapSize = mapSize!
+  backgroundTileMap = backgroundTileMap!
 
   let playerId: string | null = null;
   if (isMobile) {
@@ -86,7 +106,11 @@ async function main() {
   const canvas = document.querySelector<HTMLCanvasElement>('#game-map')!
   canvas.width = window.innerWidth
   canvas.height = window.innerHeight
-  drawGameMap(canvas, globalEntityMap, playerId)
+  drawGameMap(canvas, globalEntityMap, playerId, mapSize)
+  // drawGameMap.setBackground(
+  //   document.querySelector<HTMLCanvasElement>('#game-map-background')!,
+  //   backgroundTileMap,
+  // )
   const touchElement = document.querySelector<HTMLDivElement>('#touch-element')!
   const touchCallbacks = {
     tapNextToPlayer: (direction: number) => {

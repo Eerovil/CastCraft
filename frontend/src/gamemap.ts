@@ -1,7 +1,7 @@
 // @ts-ignore
 import Entity from './apiTypes'
 import { getImg } from './imgUtils'
-import { EntityMap } from './moreTypes'
+import { BackgroundTileMap, EntityMap } from './moreTypes'
 import { getCurrentTime } from './timeUtils'
 
 class MapDrawer {
@@ -15,8 +15,13 @@ class MapDrawer {
     playerY: number = 0
     frameTime: number = 0
 
-    constructor(globalEntityMap: EntityMap, canvas: HTMLCanvasElement, playerId: string | null) {
+    mapSize: number[] = [0, 0, 0, 0]
+    backgroundCanvas: HTMLCanvasElement | null = null
+    backgroundTileMap: BackgroundTileMap | null = null
+
+    constructor(globalEntityMap: EntityMap, canvas: HTMLCanvasElement, playerId: string | null, mapSize: number[]) {
         this.entities = globalEntityMap
+        this.mapSize = mapSize
         this.canvas = canvas
         canvas.width = window.innerWidth
         canvas.height = window.innerHeight
@@ -100,12 +105,13 @@ class MapDrawer {
     async drawGrid(ctx: CanvasRenderingContext2D) {
         // Draw a 32*32 grid starting at 0,0 to all directions
 
-        const { x: originX, y: originY } = this.convertCoordinates(0, 0)
+        const { x: originX, y: originY } = this.convertCoordinates(this.mapSize[0], this.mapSize[1])
+        const { x: maxX, y: maxY } = this.convertCoordinates(this.mapSize[2], this.mapSize[3])
 
-        let x = originX - (32 * 100);
-        let y = originY - (32 * 100);
+        let x = originX;
+        let y = originY;
 
-        while (x < originX + (32 * 300)) {
+        while (x <= maxX) {
             // Draw vertical line
             ctx.beginPath();
             ctx.moveTo(x, -3000);
@@ -114,7 +120,7 @@ class MapDrawer {
             x += 32;
         }
 
-        while (y < originY + (32 * 300)) {
+        while (y <= maxY) {
             ctx.beginPath();
             ctx.moveTo(-3000, y);
             ctx.lineTo(3000, y);
@@ -203,11 +209,30 @@ class MapDrawer {
             ctx.fillText(entity.nickname, x, y - 10)
         }
     }
+
+    setBackground(canvas: HTMLCanvasElement, backgroundTileMap: BackgroundTileMap) {
+        this.backgroundCanvas = canvas
+        this.backgroundTileMap = backgroundTileMap
+    }
+
+    reDrawBackground() {
+        if (!this.backgroundCanvas || !this.backgroundTileMap) {
+            return
+        }
+        const ctx = this.backgroundCanvas.getContext('2d')
+        if (!ctx) {
+            return
+        }
+        ctx.clearRect(0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height)
+        // const { x: originX, y: originY } = this.convertCoordinates(0, 0)
+
+    }
 }
 
 
-export function drawGameMap(canvas: HTMLCanvasElement, globalEntityMap: EntityMap, playerId: string | null) {
-    const mapDrawer = new MapDrawer(globalEntityMap, canvas, playerId)
+export function drawGameMap(canvas: HTMLCanvasElement, globalEntityMap: EntityMap, playerId: string | null, mapSize: number[]) {
+    const mapDrawer = new MapDrawer(globalEntityMap, canvas, playerId, mapSize)
     mapDrawer.redrawAllEntities();
     (window as any).mapDrawer = mapDrawer;
+    return mapDrawer;
 }

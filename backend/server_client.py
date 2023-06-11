@@ -31,7 +31,7 @@ def on_entity_update(data):
             lowest_timeout = entity['action']['timeout']
     
     next_update = lowest_timeout
-    logger.info(f"Next update in {next_update} seconds")
+    logger.info(f"Next update in {(next_update - get_current_time()) / 1000} seconds")
 
 
 logger.info("Waiting for update: %s, %s", get_current_time(), next_update)

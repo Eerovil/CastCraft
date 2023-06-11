@@ -5,6 +5,8 @@ from flask import Flask, request, redirect
 from flask_socketio import SocketIO, emit
 from sqlitedict import SqliteDict
 from actions import update_actions, handle_player_touch
+from utils import MAP_BOUNDS
+from entity_types.cozy_farm import get_grass
 from time_utils import get_current_time
 from db import get_entity_db
 from user_utils import handle_user_connected
@@ -122,7 +124,13 @@ def build_full_entity_dump():
     update_actions()
     entity_db = get_entity_db()
     ret = {
-        "entities": {}
+        "entities": {},
+        "background": {
+            "grass": {
+                key: value.dict() for key, value in get_grass().items()
+            }
+        },
+        "mapSize": MAP_BOUNDS,
     }
     for entity_id, entity in entity_db.items():
         entity.update_sprites()

@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
-import { EntityMap, FullDump, PartialDump } from "./moreTypes";
+import { BackgroundTileMap, EntityMap, FullDump, PartialDump } from "./moreTypes";
 import { getCurrentTime, setCurrentTime } from "./timeUtils";
 import { Item } from "./apiTypes";
 
@@ -12,6 +12,7 @@ console.log("URL: ", URL);
 interface socketUtilsProps {
     entities: EntityMap,
     nickname: string,
+    fullDumpCallback?: (data: FullDump) => void,
 }
 
 interface ServerTimeData {
@@ -20,6 +21,7 @@ interface ServerTimeData {
 
 class socketUtils {
     entities: EntityMap
+    fullDumpCallback: (data: FullDump) => void
     actionCheckTimeout: NodeJS.Timeout | null = null
     nickname: string
     socket: any
@@ -27,6 +29,7 @@ class socketUtils {
     constructor(props: socketUtilsProps) {
         this.entities = props.entities
         this.nickname = props.nickname
+        this.fullDumpCallback = props.fullDumpCallback || (() => { })
         try {
             this.socket = io(URL, {
                 path: "/castcraft/socket.io",
@@ -91,6 +94,7 @@ class socketUtils {
                         return;
                     }
                     this.setEntities(data.entities);
+                    this.fullDumpCallback(data);
                     this.afterFirstConnect();
                     const pingStart = getCurrentTime();
                     fetch('/castcraft/api/ping', {
