@@ -194,8 +194,11 @@ class MapDrawer {
             return
         }
         const invisibleCanvas = document.createElement('canvas')
-        invisibleCanvas.width = this.mapSize[2] - this.mapSize[0]
-        invisibleCanvas.height = this.mapSize[3] - this.mapSize[1]
+
+        const waterSize = 100 * 32;
+
+        invisibleCanvas.width = this.mapSize[2] - this.mapSize[0] + waterSize;
+        invisibleCanvas.height = this.mapSize[3] - this.mapSize[1] + waterSize;
         const ctx = invisibleCanvas.getContext('2d')
         if (!ctx) {
             return
@@ -223,6 +226,7 @@ class MapDrawer {
             extra5: Sprite,
             extra6: Sprite,
             extra7: Sprite,
+            water: Sprite,
         }
 
         const tileMap: TileMap = this.backgroundTileMap.grass as any;
@@ -235,8 +239,13 @@ class MapDrawer {
             );
         }
 
-        for (let x = originX; x < maxX; x += 32) {
-            for (let y = originY; y < maxY; y += 32) {
+        for (let x = originX - waterSize; x < maxX + waterSize; x += 32) {
+            for (let y = originY - waterSize; y < maxY + waterSize; y += 32) {
+                if (x < originX || x > maxX - 32 || y < originY || y > maxY - 32) {
+                    // Draw water
+                    await drawSprite(x, y, tileMap.water)
+                    continue
+                }
                 if (x == 0) {
                     // Left side
                     if (y == 0) {
@@ -273,6 +282,7 @@ class MapDrawer {
                 }
                 if (Math.random() < 0.2) {
                     // Draw a random sprite extra1, extra2, extra3
+                    // @ts-ignore
                     const sprite = tileMap[`extra${Math.floor(Math.random() * 6) + 1}`]
                     await drawSprite(x, y, sprite)
                 }

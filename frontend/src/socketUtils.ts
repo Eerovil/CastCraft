@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
-import { BackgroundTileMap, EntityMap, FullDump, PartialDump } from "./moreTypes";
+import { EntityMap, FullDump, PartialDump } from "./moreTypes";
 import { getCurrentTime, setCurrentTime } from "./timeUtils";
 import { Item } from "./apiTypes";
 

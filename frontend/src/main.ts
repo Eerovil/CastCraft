@@ -4,7 +4,7 @@ import { initNetwork } from './socketUtils.ts'
 import { BackgroundTileMap, EntityMap } from './moreTypes'
 import { startTouchInput } from './touchInput'
 import { initializeInventory } from './inventory.ts'
-import { Item, Sprite } from './apiTypes.ts'
+import { Item } from './apiTypes.ts'
 import * as Sentry from "@sentry/browser";
 import { initializeTopBar } from './topBar.ts'
 

@@ -83,4 +83,8 @@ def get_grass():
             x=11 * GRASS_TILE,
             y=0 * GRASS_TILE,
         ),
+        'water': GrassSprite(
+            x=12 * GRASS_TILE,
+            y=13 * GRASS_TILE,
+        ),
     }
