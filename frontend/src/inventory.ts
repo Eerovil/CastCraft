@@ -40,7 +40,6 @@ class Inventory {
         if (!inventory || !inventory.items) {
             return;
         }
-        console.log(inventory);
         for (let i = 0; i < inventory.items.length; i++) {
             const item = inventory.items[i];
             const slot = this.element.children[i] as HTMLDivElement;

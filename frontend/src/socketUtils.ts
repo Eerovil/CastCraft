@@ -67,7 +67,7 @@ class socketUtils {
             }
             return;
         }
-        const timeUntilNextAction = lowestTimeout - currentTime;
+        const timeUntilNextAction = lowestTimeout - currentTime + 50;
         if (timeUntilNextAction <= 0) {
             this.fetchEntityUpdate();
         } else {
@@ -108,9 +108,7 @@ class socketUtils {
     waitUntilConnected() {
         return new Promise((resolve) => {
             this.socket.on('connect', () => {
-                this.socket.emit('connected', {
-                    'nickname': this.nickname,
-                }, (data: FullDump) => {
+                this.socket.on('firstConnect', (data: FullDump) => {
                     console.log("connected: ", data);
                     if (!data || !data.entities) {
                         return;
@@ -118,13 +116,18 @@ class socketUtils {
                     this.setEntities(data.entities);
                     this.afterFirstConnect();
                     const pingStart = getCurrentTime();
-                    this.socket.emit('ping', {}, (data: ServerTimeData) => {
+                    this.socket.on('pong', (data: ServerTimeData) => {
                         const pingEnd = getCurrentTime();
                         const serverTime = data.serverTime;
                         const currentServerTime = serverTime + (pingEnd - pingStart) / 2;
-                        setCurrentTime(currentServerTime); 
+                        setCurrentTime(currentServerTime);
+                        console.log(getCurrentTime(), currentServerTime, (pingEnd - pingStart) / 2)
                         resolve(null);
-                    });
+                    })
+                    this.socket.emit('ping', {});
+                });
+                this.socket.emit('connected', {
+                    'nickname': this.nickname,
                 });
             });
         });
@@ -133,8 +136,6 @@ class socketUtils {
     movePlayer(direction: number) {
         this.socket.emit('movePlayer', {
             direction: direction
-        }, (data: PartialDump) => {
-            console.log("movePlayer: ", data);
         });
     }
 

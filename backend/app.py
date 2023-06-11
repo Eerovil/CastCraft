@@ -40,28 +40,26 @@ def conn(data):
     logger.info("Connected: %s", data)
     print("Connected")
     nickname = data.get("nickname")
-    if nickname is None:
-        return build_full_entity_dump()
+    if nickname:
+        player_entity = handle_user_connected(request.sid, nickname)
 
-    player_entity = handle_user_connected(request.sid, nickname)
+        logger.info("Player %s connected, entity id %s",
+                    nickname, player_entity.id if player_entity else None)
 
-    logger.info("Player %s connected, entity id %s",
-                nickname, player_entity.id if player_entity else None)
+        if player_entity:
+            emit('entity_update', {
+                'deletedEntityIds': [],
+                'changedEntities': {
+                    player_entity.id: player_entity.dict()
+                }
+            }, broadcast=True)
 
-    if player_entity:
-        emit('entity_update', {
-            'deletedEntityIds': [],
-            'changedEntities': {
-                player_entity.id: player_entity.dict()
-            }
-        }, broadcast=True)
-
-    return build_full_entity_dump()
+    emit('firstConnect', build_full_entity_dump(), broadcast=False)
 
 
 @socketio.on('ping')
 def conn(data):
-    return {"serverTime": get_current_time()}
+    emit('pong', {"serverTime": get_current_time()}, broadcast=False)
 
 
 @socketio.on('movePlayer')
