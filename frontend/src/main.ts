@@ -6,6 +6,7 @@ import { startTouchInput } from './touchInput'
 import { initializeInventory } from './inventory.ts'
 import { Item } from './apiTypes.ts'
 import * as Sentry from "@sentry/browser";
+import { initializeTopBar } from './topBar.ts'
 
 
 Sentry.init({
@@ -30,6 +31,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <canvas id="game-map"></canvas>
     <div id="touch-element"></div>
     <div id="inventory"></div>
+    <div id="top-bar"></div>
   </div>
 `
 
@@ -60,6 +62,7 @@ async function main() {
     nickname = prompt('Kirjoita nimesi') || 'Anonymous'
   } else if (!isMobile) {
     nickname = 'TV'
+    document.querySelector('#top-bar')!.remove()
   }
   setQueryParam('nickname', nickname);
   (window as any).nickname = nickname
@@ -101,6 +104,8 @@ async function main() {
     }
     const inventoryEl = document.querySelector<HTMLDivElement>('#inventory')!
     initializeInventory(inventoryEl, globalEntityMap, playerId, inventoryCallbacks)
+    const topBarEl = document.querySelector<HTMLDivElement>('#top-bar')!
+    initializeTopBar(topBarEl);
   }
 }
 

@@ -1,1 +1,0 @@
-body{margin:0;background-color:#fff!important}#touch-element{width:100vw;height:100vh;z-index:1;position:fixed;top:0;left:0}#inventory{z-index:2;position:fixed;bottom:0;left:0;width:100%;height:200px;background-color:#fff}#inventory .inventory-slot{display:inline-block;width:17vw;height:17vw;background-color:#ccc;margin:5px}
