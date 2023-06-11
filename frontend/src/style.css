@@ -1,5 +1,6 @@
 body {
   margin: 0;
+  background-color: white !important;
 }
 #touch-element {
   width: 100vw;
