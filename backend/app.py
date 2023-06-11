@@ -30,7 +30,7 @@ def index():
 
 
 @app.route('/castcraft/')
-def index():
+def index2():
     return redirect('/castcraft/index.html')
 
 
