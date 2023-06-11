@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.INFO)
 app = Flask(__name__, static_url_path='/castcraft/', static_folder='../static/')
 
 app.config['SECRET_KEY'] = 'eero'
-socketio = SocketIO(app, path="/castcraft/socket.io")
+socketio = SocketIO(app, path="/castcraft/socket.io", cors_allowed_origins="*")
 
 
 
