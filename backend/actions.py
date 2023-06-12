@@ -78,7 +78,7 @@ def handle_player_touch(request, direction):
         return [], changed_entities + [player_entity]
 
     if player_entity.carrying_entity_id:
-        if action.action != 'move':
+        if action != 'move':
             return [], changed_entities
 
     if action:
