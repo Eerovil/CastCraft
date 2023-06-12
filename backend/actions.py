@@ -72,9 +72,14 @@ def handle_player_touch(request, direction):
             return [], changed_entities
 
         # Cancel the current action
+        logger.info("Player cancelled action: %s", player_entity.action)
         if player_entity.action.target_id:
             target_entity = entity_db[player_entity.action.target_id]
             target_entity.finish_shaking()
+            if target_entity.carried_by_entity_id:
+                # Cant cancel an action on a carried entity
+                return [], changed_entities
+
             entity_db[target_entity.id] = target_entity
             changed_entities.append(target_entity)
 
