@@ -7,6 +7,7 @@ import { initializeInventory } from './inventory.ts'
 import { Item } from './apiTypes.ts'
 import * as Sentry from "@sentry/browser";
 import { initializeTopBar } from './topBar.ts'
+import './polyfills.ts'
 
 
 Sentry.init({
