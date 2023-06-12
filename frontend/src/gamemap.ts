@@ -75,9 +75,9 @@ class MapDrawer {
             sortBy(Object.values(this.entities), (entity) => entity.y),
             (entity) => entity.carried_by_entity_id ? 1 : -1,
         )
-        // if (this.playerId) {
-        //     this.drawTouchAreas()
-        // }
+        if (this.playerId) {
+            this.drawTouchAreas()
+        }
         for (const entity of sortedEntities) {
             await this.drawEntity(ctx, entity)
         }
