@@ -50,6 +50,7 @@ class PreRenderSingleton {
         canvas.width = values.width
         canvas.height = values.height
         const ctx = canvas.getContext('2d')!
+        ctx.imageSmoothingEnabled = false
 
         for (const sprite of values.sprites) {
             await getImg(sprite.url)
