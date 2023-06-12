@@ -61,7 +61,6 @@ class socketUtils {
 
     afterFirstConnect() {
         this.socket.on('entity_update', (data: PartialDump) => {
-            console.log("entity_update: ", data);
             this.handleEntityUpdate(data);
         });
         this.socket.on('disconnect', () => {

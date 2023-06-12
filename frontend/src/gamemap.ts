@@ -1,5 +1,6 @@
 // @ts-ignore
 import Entity, { Sprite } from './apiTypes'
+import { getSpritesAsCanvas } from './drawUtils'
 import { getImg } from './imgUtils'
 import { BackgroundTileMap, EntityMap } from './moreTypes'
 import { getCurrentTime } from './timeUtils'
@@ -196,19 +197,11 @@ class MapDrawer {
             }
         }
 
-        for (const sprite of sprites) {
-            const img = await getImg(sprite.url)
-            try {
-                ctx.drawImage(
-                    img,
-                    sprite.x, sprite.y, sprite.width, sprite.height,
-                    x + entity.x_offset, y + entity.y_offset, entity.width, entity.height
-                );
-            } catch (e) {
-                console.error(e)
-            }
-            (window as any).spritesDrawn += 1
-        }
+        const spritesCanvas = await getSpritesAsCanvas({
+            sprites, width: entity.width, height: entity.height
+        })
+        ctx.drawImage(spritesCanvas, x + entity.x_offset, y + entity.y_offset)
+
         // Draw a dot at the x/y of the entity
         ctx.fillStyle = 'red'
         ctx.font = '4px Arial'
