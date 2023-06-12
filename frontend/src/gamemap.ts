@@ -285,6 +285,7 @@ class MapDrawer {
         invisibleCanvas.width = this.mapSize[2] + waterSize;
         invisibleCanvas.height = this.mapSize[3] + waterSize;
         const ctx = invisibleCanvas.getContext('2d', {
+            alpha: false,
             willReadFrequently: true,
         })!
         if (!ctx) {
