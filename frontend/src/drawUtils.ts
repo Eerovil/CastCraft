@@ -52,12 +52,13 @@ class PreRenderSingleton {
         const ctx = canvas.getContext('2d')!
         ctx.imageSmoothingEnabled = false
 
+        const urlToImg: { [key: string]: HTMLImageElement } = {}
         for (const sprite of values.sprites) {
-            await getImg(sprite.url)
+            urlToImg[sprite.url] = await getImg(sprite.url)
         }
 
         for (const sprite of values.sprites) {
-            const img = await getImg(sprite.url)
+            const img = urlToImg[sprite.url]
             try {
                 ctx.drawImage(
                     img,
@@ -70,13 +71,12 @@ class PreRenderSingleton {
         }
 
         this.prerenderedSprites[hash] = canvas
-        console.log(`Prerendered ${hash} (${values.sprites.length} sprites)`)
     }
 }
 
 const preRenderSingleton = new PreRenderSingleton()
 
 
-export function getSpritesAsCanvas(values: SpritesValues) {
-    return preRenderSingleton.getPrerenderedSprite(values)
+export async function getSpritesAsCanvas(values: SpritesValues) {
+    return await preRenderSingleton.getPrerenderedSprite(values)
 }

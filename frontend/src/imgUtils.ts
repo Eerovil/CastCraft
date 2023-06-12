@@ -10,7 +10,7 @@ class ImgPreloader {
     }
 
     async getImg(url: string) {
-        if (this.preloadedImages[url]) {
+        if (url in this.preloadedImages) {
             return this.preloadedImages[url]
         }
         if (url in this.preloadedImagesPromises) {
@@ -35,12 +35,13 @@ class ImgPreloader {
                 resolve()
             }
         })
-        return img
+        await this.preloadedImagesPromises[url]
+        return this.preloadedImages[url]
     }
 }
 
 const imgPreloader = new ImgPreloader()
 
-export function getImg(url: string) {
-    return imgPreloader.getImg(url)
+export async function getImg(url: string) {
+    return await imgPreloader.getImg(url)
 }
