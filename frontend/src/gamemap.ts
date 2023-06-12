@@ -348,9 +348,37 @@ class MapDrawer {
         if (!ctx) {
             return
         }
-        const { x, y } = this.convertCoordinates(0, 0)
 
-        ctx.drawImage(this.backgroundImage, x, y)
+        if (!this.playerId) {
+            // Draw entire background (Find out what 0, 0 means in the current view)
+            // And draw the background from there
+            const { x, y } = this.convertCoordinates(0, 0)
+    
+            ctx.drawImage(this.backgroundImage, x, y)
+        } else {
+            // Draw only the visible part of the background
+
+            // This is the coordinates of the start of the visible
+            // part of the background
+            const minX = this.playerX - this.canvas.width
+            const minY = this.playerY - this.canvas.height
+
+            // Find where we want to draw it in current context
+            const { x: drawX, y: drawY } = this.convertCoordinates(
+                minX,
+                minY
+            )
+
+            const width = this.canvas.width * 3
+            const height = this.canvas.height * 3
+
+            ctx.drawImage(
+                this.backgroundImage,
+                minX, minY, width, height,
+                drawX, drawY, width, height
+            )
+        }
+
     }
 }
 
