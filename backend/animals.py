@@ -63,3 +63,14 @@ def spawn_animals():
         brown_chicken = spawn_animal("chicken", "chicken_brown animation")
 
     return [chicken, brown_chicken]
+
+
+def check_stuck_animals():
+    entity_db = get_entity_db()
+    for entity in list(get_entity_db().values()):
+        if not isinstance(entity, Animal):
+            continue
+        if entity.carried_by_entity_id:
+            carrying_entity = entity_db[entity.carried_by_entity_id]
+            if carrying_entity.carrying_entity_id != entity.id:
+                del entity_db[entity.id]

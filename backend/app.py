@@ -5,7 +5,7 @@ from flask import Flask, request, redirect
 from flask_socketio import SocketIO, emit
 from sqlitedict import SqliteDict
 from actions import handle_player_action, update_actions, handle_player_touch
-from animals import move_animals, spawn_animals
+from animals import check_stuck_animals, move_animals, spawn_animals
 from utils import MAP_BOUNDS
 from entity_types.cozy_farm import Animal, get_grass
 from time_utils import get_current_time
@@ -187,5 +187,7 @@ if __name__ == '__main__':
             if isinstance(entity, Animal):
                 del entities[entity_id]
         spawn_animals()
+
+    check_stuck_animals()
 
     socketio.run(app, debug=True, host="0.0.0.0", port=5174)
