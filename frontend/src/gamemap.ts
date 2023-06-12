@@ -175,6 +175,17 @@ class MapDrawer {
             // Draw the sprite at the current animation frame
             animationIndex = Math.floor(this.animationIndex / entity.animation_speed)
         }
+
+        let shakeX = 0, shakeY = 0;
+        for (const animation of entity.animations || []) {
+            if (animation.type == 'shake') {
+                // Shake the coordinates by a random amount
+                // from -2 to 2
+                shakeX = Math.random() * 4 - 2
+                shakeY = Math.random() * 4 - 2
+            }
+        }
+
         const sprites = entity.sprites[animationIndex % entity.sprites.length] || [];
 
         if (entity.id == this.playerId) {
@@ -200,7 +211,13 @@ class MapDrawer {
         const spritesCanvas = await getSpritesAsCanvas({
             sprites, width: entity.width, height: entity.height
         })
-        ctx.drawImage(spritesCanvas, x + entity.x_offset, y + entity.y_offset)
+        ctx.drawImage(
+            spritesCanvas,
+            x + entity.x_offset + shakeX,
+            y + entity.y_offset + shakeY,
+            entity.width,
+            entity.height
+        )
 
         // Draw a dot at the x/y of the entity
         ctx.fillStyle = 'red'

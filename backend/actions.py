@@ -72,6 +72,12 @@ def handle_player_touch(request, direction):
             return [], changed_entities
 
         # Cancel the current action
+        if player_entity.action.target_id:
+            target_entity = entity_db[player_entity.action.target_id]
+            target_entity.finish_shaking()
+            entity_db[target_entity.id] = target_entity
+            changed_entities.append(target_entity)
+
         player_entity.action = None
         player_entity.update_sprites()
         entity_db[player_entity.id] = player_entity
@@ -108,6 +114,9 @@ def handle_player_touch(request, direction):
                 timeout=get_current_time() + final_time,
                 target_id=blocking_entity.id
             )
+            blocking_entity.start_shaking()
+            entity_db[blocking_entity.id] = blocking_entity
+            changed_entities.append(blocking_entity)
         elif action == "to_inventory":
             logger.info(f"Player started picking up {blocking_entity.id}")
             player_entity.action = Action(

@@ -2,12 +2,17 @@ from pydantic import BaseModel
 from typing import List, Optional, Literal
 
 from time_utils import get_current_time
+import os
 
 try:
     from items_static import ITEM_SLUGS  # noqa
 except ImportError:
     # For pydantic2ts
     from .items_static import ITEM_SLUGS  # noqa
+
+
+def debug_mode():
+    return os.environ.get('CC_DEBUG', False) == '1'
 
 
 class DirectionsType(BaseModel):
@@ -122,16 +127,31 @@ class Entity(BaseModel):
         self.x = target_x
         self.y = target_y
 
+        move_time = 1000
+
+        if debug_mode():
+            move_time = 100
+
         self.action = Action(
             action='move',
-            time=1000,
-            timeout=get_current_time() + 1000
+            time=move_time,
+            timeout=get_current_time() + move_time
         )
 
     def finish_moving(self):
         self.x_from = self.x
         self.y_from = self.y
         self.action = None
+
+    def start_shaking(self):
+        self.finish_shaking()
+        self.animations.append(BasicAnimation(type='shake'))
+
+    def finish_shaking(self):
+        for animation in self.animations:
+            if animation.type == 'shake':
+                self.animations.remove(animation)
+                break
 
 
 class User(BaseModel):
