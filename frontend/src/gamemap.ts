@@ -24,6 +24,9 @@ class MapDrawer {
     backgroundImage: HTMLImageElement | null = null
     backgroundTileMap: BackgroundTileMap | null = null
 
+    predrawnTouchAreas: HTMLCanvasElement | null = null
+    predrawnTexts: { [key: string]: HTMLCanvasElement } = {}
+
     constructor(globalEntityMap: EntityMap, canvas: HTMLCanvasElement, playerId: string | null, mapSize: number[]) {
         this.entities = globalEntityMap
         this.mapSize = mapSize
@@ -88,37 +91,72 @@ class MapDrawer {
         })
     }
 
+    predrawTouchAreas() {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+            throw new Error('Could not get canvas context')
+        }
+        // Draw a square above, below, left, and right of the player
+        const touchAreaSize = 32
+        const touchAreaColor = 'rgba(255, 0, 0, 0.5)'
+        canvas.width = touchAreaSize * 3
+        canvas.height = touchAreaSize * 3
+
+        ctx.imageSmoothingEnabled = false;
+        ctx.fillStyle = touchAreaColor
+        const drawRect = (x: number, y: number) => {
+            ctx.strokeStyle = 'green';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, touchAreaSize, touchAreaSize);
+        }
+
+        let x = touchAreaSize
+        let y = touchAreaSize
+
+        drawRect(x - touchAreaSize, y)
+        drawRect(x + touchAreaSize, y)
+        drawRect(x, y - touchAreaSize)
+        drawRect(x, y + touchAreaSize)
+
+        this.predrawnTouchAreas = canvas
+    }
+
     drawTouchAreas() {
         const ctx = this.ctx;
         const player = this.entities[this.playerId!]
         if (!player) {
             return
         }
-        // Draw a square above, below, left, and right of the player
+        if (!this.predrawnTouchAreas) {
+            this.predrawTouchAreas()
+        }
+        const predrawnTouchAreas = this.predrawnTouchAreas as HTMLCanvasElement
+        // const { x, y } = this.convertCoordinates(player.x, player.y)
+        const { x, y } = this.convertCoordinates(player.x, player.y)
         const touchAreaSize = 32
-        const touchAreaColor = 'rgba(255, 0, 0, 0.5)'
+        ctx.drawImage(predrawnTouchAreas, x - touchAreaSize, y - touchAreaSize)
+    }
 
-        ctx.fillStyle = touchAreaColor
-        const drawRect = (x: number, y: number) => {
-            const { x: newX, y: newY } = this.convertCoordinates(x, y)
-
-            ctx.strokeStyle = 'green';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(newX, newY, touchAreaSize, touchAreaSize);
+    drawText(ctx2: CanvasRenderingContext2D, text: string, x: number, y: number, color: string = 'black') {
+        if (text in this.predrawnTexts) {
+            const canvas = this.predrawnTexts[text]
+            ctx2.drawImage(canvas, x, y)
+            return
         }
-
-        let x = player.x
-        let y = player.y
-
-        if (player.x_from != undefined && player.y_from != undefined) {
-            x = player.x_from
-            y = player.y_from
+        const canvas = document.createElement('canvas')
+        canvas.width = 100
+        canvas.height = 100
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+            throw new Error('Could not get canvas context')
         }
-
-        drawRect(x - touchAreaSize, y)
-        drawRect(x + touchAreaSize, y)
-        drawRect(x, y - touchAreaSize)
-        drawRect(x, y + touchAreaSize)
+        ctx.imageSmoothingEnabled = false;
+        ctx.font = '16px Arial'
+        ctx.fillStyle = color
+        ctx.fillText(text, 0, 16)
+        this.predrawnTexts[text] = canvas
+        ctx2.drawImage(canvas, x, y)
     }
 
     convertCoordinates(x: number, y: number) {
@@ -220,13 +258,10 @@ class MapDrawer {
         )
 
         // Draw a dot at the x/y of the entity
-        ctx.fillStyle = 'red'
-        ctx.font = '4px Arial'
-        ctx.fillText(entity.id, x, y)
+        // this.drawText(ctx, entity.id, x, y, 'red')
+
         if (entity.nickname) {
-            ctx.fillStyle = 'black'
-            ctx.font = '10px Arial'
-            ctx.fillText(entity.nickname, x, y - 10)
+            this.drawText(ctx, entity.nickname, x, y - 20, 'black')
         }
     }
 
