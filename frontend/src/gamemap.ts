@@ -66,11 +66,17 @@ class MapDrawer {
     }
 
     async redrawAllEntities() {
+        if (this.animationIndex == 100) {
+            console.time('redrawAllEntities')
+        }
         const canvas = this.canvas;
         const ctx = this.ctx;
         ctx.clearRect(-canvas.width, -canvas.height, canvas.width * 2, canvas.height * 2)
         const promises: Promise<void>[] = []
         this.drawBackground()
+        if (this.animationIndex == 100) {
+            console.timeLog('redrawAllEntities', 'drawBackground')
+        }
         const sortedEntities = sortBy(
             sortBy(Object.values(this.entities), (entity) => entity.y),
             (entity) => entity.carried_by_entity_id ? 1 : -1,
@@ -78,8 +84,14 @@ class MapDrawer {
         if (this.playerId) {
             this.drawTouchAreas()
         }
+        if (this.animationIndex == 100) {
+            console.timeLog('redrawAllEntities', 'drawTouchAreas')
+        }
         for (const entity of sortedEntities) {
             await this.drawEntity(ctx, entity)
+        }
+        if (this.animationIndex == 100) {
+            console.timeLog('redrawAllEntities', 'drawEntity')
         }
         Promise.all(promises).then(() => {
             setTimeout(() => {
