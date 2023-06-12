@@ -93,7 +93,9 @@ class MapDrawer {
 
     predrawTouchAreas() {
         const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
+        const ctx = canvas.getContext('2d', {
+            willReadFrequently: true,
+        })!
         if (!ctx) {
             throw new Error('Could not get canvas context')
         }
@@ -147,7 +149,9 @@ class MapDrawer {
         const canvas = document.createElement('canvas')
         canvas.width = 100
         canvas.height = 100
-        const ctx = canvas.getContext('2d')
+        const ctx = canvas.getContext('2d', {
+            willReadFrequently: true,
+        })!
         if (!ctx) {
             throw new Error('Could not get canvas context')
         }
@@ -280,7 +284,9 @@ class MapDrawer {
 
         invisibleCanvas.width = this.mapSize[2] + waterSize;
         invisibleCanvas.height = this.mapSize[3] + waterSize;
-        const ctx = invisibleCanvas.getContext('2d')
+        const ctx = invisibleCanvas.getContext('2d', {
+            willReadFrequently: true,
+        })!
         if (!ctx) {
             return
         }

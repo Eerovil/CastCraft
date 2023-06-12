@@ -50,7 +50,9 @@ class Inventory {
             const canvas = document.createElement('canvas');
             canvas.width = 50;
             canvas.height = 50;
-            const ctx = canvas.getContext('2d');
+            const ctx = canvas.getContext('2d', {
+                willReadFrequently: true,
+            })!
             if (!ctx) {
                 continue;
             }
