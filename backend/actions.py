@@ -77,6 +77,10 @@ def handle_player_touch(request, direction):
         entity_db[player_entity.id] = player_entity
         return [], changed_entities + [player_entity]
 
+    if player_entity.carrying_entity_id:
+        if action.action != 'move':
+            return [], changed_entities
+
     if action:
         if action == "move":
             logger.info(f"Player started moving from {player_entity.x} to direction {direction}")

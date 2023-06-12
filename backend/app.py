@@ -7,7 +7,7 @@ from sqlitedict import SqliteDict
 from actions import handle_player_action, update_actions, handle_player_touch
 from animals import move_animals, spawn_animals
 from utils import MAP_BOUNDS
-from entity_types.cozy_farm import get_grass
+from entity_types.cozy_farm import Animal, get_grass
 from time_utils import get_current_time
 from db import get_entity_db
 from user_utils import handle_user_connected
@@ -170,9 +170,22 @@ def build_full_entity_dump():
 
 if __name__ == '__main__':
     SqliteDict('entities.db', tablename="entities", autocommit=True)
-    entities = get_entity_db()
-    entities.clear()
-    spawn_nature_things()
-    spawn_animals()
+
+    import sys
+    # If --reset is passed, clear the database
+    if "--reset" in sys.argv:
+        logger.info("Resetting database")
+        entities = get_entity_db()
+        entities.clear()
+        spawn_nature_things()
+        spawn_animals()
+
+    if "--reset_animals" in sys.argv:
+        logger.info("Resetting animals")
+        entities = get_entity_db()
+        for entity_id, entity in entities.items():
+            if isinstance(entity, Animal):
+                del entities[entity_id]
+        spawn_animals()
 
     socketio.run(app, debug=True, host="0.0.0.0", port=5174)
