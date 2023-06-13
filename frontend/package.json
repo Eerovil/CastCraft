@@ -16,6 +16,7 @@
   "dependencies": {
     "@sentry/browser": "^7.54.0",
     "json-schema-to-typescript": "^13.0.1",
+    "pixi.js": "^7.2.4",
     "socket.io-client": "^4.6.2"
   }
 }

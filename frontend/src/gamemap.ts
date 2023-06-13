@@ -1,7 +1,7 @@
 // @ts-ignore
-import Entity, { Sprite } from './apiTypes'
-import { getSpritesAsCanvas } from './drawUtils'
-import { getImg } from './imgUtils'
+import { Application, Loader as PixiLoader, Texture, AnimatedSprite } from 'pixi.js'
+import { Entity } from './apiTypes'
+import { getSpritesAsTextures, getSpritesValuesHash } from './drawUtils'
 import { BackgroundTileMap, EntityMap } from './moreTypes'
 import { getCurrentTime } from './timeUtils'
 
@@ -9,16 +9,27 @@ function sortBy(arr: Array<any>, callback: (item: any) => number) {
     return arr.sort((a: any, b: any) => callback(a) - callback(b))
 }
 
+
+type PixiEntity = {
+    hash: string
+    sprites: AnimatedSprite[]
+}
+
+
 class MapDrawer {
     entities: EntityMap
-    canvas: HTMLCanvasElement
-    ctx: CanvasRenderingContext2D;
+    app: Application
+
+    pixiEntities: { [key: string]: PixiEntity } = {}
+
     preloadedImages: { [key: string]: HTMLImageElement }
     animationIndex: number = 0
     playerId: string | null = null
     playerX: number = 0
     playerY: number = 0
     frameTime: number = 0
+
+    isMobile: boolean = true
 
     mapSize: number[] = [0, 0, 0, 0]
     backgroundImage: HTMLImageElement | null = null
@@ -27,22 +38,16 @@ class MapDrawer {
     predrawnTouchAreas: HTMLCanvasElement | null = null
     predrawnTexts: { [key: string]: HTMLCanvasElement } = {}
 
-    constructor(globalEntityMap: EntityMap, canvas: HTMLCanvasElement, playerId: string | null, mapSize: number[]) {
+    constructor(app: Application, globalEntityMap: EntityMap, playerId: string | null, mapSize: number[]) {
         this.entities = globalEntityMap
         this.mapSize = mapSize
-        this.canvas = canvas
-        canvas.width = window.innerWidth
-        canvas.height = window.innerHeight
+        this.app = app
+
         this.preloadedImages = {}
         console.log('MapDrawer constructor: ', this.entities)
-        const isMobile = window.innerWidth < 600
-        const ctx = canvas.getContext('2d')
-        if (!ctx) {
-            throw new Error('Could not get canvas context')
-        }
-        ctx.imageSmoothingEnabled = false;
-        this.ctx = ctx
-        if (isMobile) {
+        this.isMobile = window.innerWidth < 600
+
+        if (this.isMobile) {
             // Find our player
             this.playerId = playerId;
             if (!this.playerId) {
@@ -55,52 +60,34 @@ class MapDrawer {
             this.playerX = player.x
             this.playerY = player.y
             // zoom in to center
+            this.app.stage.position.set(
+                window.innerWidth / 2,
+                window.innerHeight / 2,
+            )
+            this.app.stage.scale.set(4)
+
             // ctx.scale(2, 2)
             // ctx.translate(canvas.width / 2, canvas.height / 2)
-            const scale = 3
-            const widthNew = ctx.canvas.width / 2;
-            const heightNew = ctx.canvas.height / 2;
-            ctx.setTransform(scale, 0, 0, scale, -(scale - 1) * widthNew, -(scale - 1) * heightNew);
-            console.log('isMobile', player.x, player.y, this.canvas.width, this.canvas.height)
+            // const scale = 3
+            // const widthNew = ctx.canvas.width / 2;
+            // const heightNew = ctx.canvas.height / 2;
+            // ctx.setTransform(scale, 0, 0, scale, -(scale - 1) * widthNew, -(scale - 1) * heightNew);
+            console.log('isMobile', player.x, player.y, this.app.stage.position)
         }
     }
 
-    async redrawAllEntities() {
-        if (this.animationIndex == 100) {
-            console.time('redrawAllEntities')
-        }
-        const canvas = this.canvas;
-        const ctx = this.ctx;
-        ctx.clearRect(-canvas.width, -canvas.height, canvas.width * 2, canvas.height * 2)
-        const promises: Promise<void>[] = []
-        this.drawBackground()
-        if (this.animationIndex == 100) {
-            console.timeLog('redrawAllEntities', 'drawBackground')
-        }
+    async updateAllEntities() {
         const sortedEntities = sortBy(
             sortBy(Object.values(this.entities), (entity) => entity.y),
             (entity) => entity.carried_by_entity_id ? 1 : -1,
         )
-        if (this.playerId) {
-            this.drawTouchAreas()
-        }
-        if (this.animationIndex == 100) {
-            console.timeLog('redrawAllEntities', 'drawTouchAreas')
-        }
+        // if (this.playerId) {
+        //     this.drawTouchAreas()
+        // }
         for (const entity of sortedEntities) {
-            await this.drawEntity(ctx, entity)
+            await this.updateEntity(entity)
         }
-        if (this.animationIndex == 100) {
-            console.timeLog('redrawAllEntities', 'drawEntity')
-        }
-        Promise.all(promises).then(() => {
-            setTimeout(() => {
-                window.requestAnimationFrame(() => {
-                    this.animationIndex += 1
-                    this.redrawAllEntities()
-                })
-            }, 40)
-        })
+        this.animationIndex += 1
     }
 
     predrawTouchAreas() {
@@ -136,21 +123,21 @@ class MapDrawer {
         this.predrawnTouchAreas = canvas
     }
 
-    drawTouchAreas() {
-        const ctx = this.ctx;
-        const player = this.entities[this.playerId!]
-        if (!player) {
-            return
-        }
-        if (!this.predrawnTouchAreas) {
-            this.predrawTouchAreas()
-        }
-        const predrawnTouchAreas = this.predrawnTouchAreas as HTMLCanvasElement
-        // const { x, y } = this.convertCoordinates(player.x, player.y)
-        const { x, y } = this.convertCoordinates(player.x, player.y)
-        const touchAreaSize = 32
-        ctx.drawImage(predrawnTouchAreas, x - touchAreaSize, y - touchAreaSize)
-    }
+    // drawTouchAreas() {
+    //     const ctx = this.ctx;
+    //     const player = this.entities[this.playerId!]
+    //     if (!player) {
+    //         return
+    //     }
+    //     if (!this.predrawnTouchAreas) {
+    //         this.predrawTouchAreas()
+    //     }
+    //     const predrawnTouchAreas = this.predrawnTouchAreas as HTMLCanvasElement
+    //     // const { x, y } = this.convertCoordinates(player.x, player.y)
+    //     const { x, y } = this.convertCoordinates(player.x, player.y)
+    //     const touchAreaSize = 32
+    //     ctx.drawImage(predrawnTouchAreas, x - touchAreaSize, y - touchAreaSize)
+    // }
 
     drawText(ctx2: CanvasRenderingContext2D, text: string, x: number, y: number, color: string = 'black') {
         if (text in this.predrawnTexts) {
@@ -179,25 +166,33 @@ class MapDrawer {
         // If playerId is set, center on player
         // New origin is at player x - (canvas.width / 2), player y - (canvas.height / 2)
         // So we must subtract that from the coordinates
-        if (!this.playerId) {
-            return { x, y }
-        }
-        const player = this.entities[this.playerId]
-        if (!player) {
-            return { x, y }
-        }
-        return {
-            x: x - (this.playerX - (this.canvas.width / 2)) - (32 / 2),
-            y: y - (this.playerY - (this.canvas.height / 2)) - 32,
-        }
+        // if (!this.playerId) {
+        //     return { x, y }
+        // }
+        // const player = this.entities[this.playerId]
+        // if (!player) {
+        //     return { x, y }
+        // }
+        // console.log('convertCoordinates', x, y, this.playerX, this.playerY, this.app.screen.width, this.app.screen.height)
+        // return {
+        //     x: x - (this.playerX - (this.app.screen.width / 2)) - (32 / 2),
+        //     y: y - (this.playerY - (this.app.screen.height / 2)) - 32,
+        // }
+        return { x, y }
     }
 
-    async drawEntity(ctx: CanvasRenderingContext2D, entity: Entity) {
-        // Draw sprite entity.url at entity.x and entity.y
-        // ...
+    async updateEntity(entity: Entity) {
+        // Update position of this entity to app
         let x = entity.x
         let y = entity.y
-        if ((entity.action || {}).action == 'move' && (entity.x_from != entity.x) || (entity.y_from != entity.y)) {
+        if (
+                (entity.action || {}).action == 'move' &&
+                (entity.x_from != undefined && entity.y_from != undefined) &&
+                (
+                    (entity.x_from != entity.x) ||
+                    (entity.y_from != entity.y)
+                )
+            ) {
             // Entity is moving, x is between x_from and x.
             const currentTime = getCurrentTime();
             const actionTimeout = entity.action ? entity.action.timeout : 0;
@@ -221,14 +216,14 @@ class MapDrawer {
                 }
             }
         }
-        let animationIndex = this.animationIndex
-        if (entity.animation_speed == 0) {
-            // Only draw the first sprite
-            animationIndex = 0
-        } else {
-            // Draw the sprite at the current animation frame
-            animationIndex = Math.floor(this.animationIndex / entity.animation_speed)
-        }
+
+        // if (entity.animation_speed == 0) {
+        //     // Only draw the first sprite
+        //     animationIndex = 0
+        // } else {
+        //     // Draw the sprite at the current animation frame
+        //     animationIndex = Math.floor(this.animationIndex / (entity.animation_speed || 1))
+        // }
 
         let shakeX = 0, shakeY = 0;
         for (const animation of entity.animations || []) {
@@ -240,223 +235,274 @@ class MapDrawer {
             }
         }
 
-        const sprites = entity.sprites[animationIndex % entity.sprites.length] || [];
-
         if (entity.id == this.playerId) {
-            this.playerX = x
-            this.playerY = y
+            this.app.stage.pivot.copyFrom({
+                x: x,
+                y: y,
+            })
         }
 
         const newCoords = this.convertCoordinates(x, y)
         x = newCoords.x
         y = newCoords.y
 
-        if (this.playerId) {
-            // If x and y are not visible, don't draw them
-            if (x < -50 || x > window.innerWidth + 50 || y < -50 || y > window.innerHeight + 50) {
-                for (const sprite of sprites) {
-                    // Still, we need to load the image for later
-                    getImg(sprite.url)
+        let pixiEntity = this.pixiEntities[entity.id]
+
+        const spritesValuess = []
+        for (const spriteList of entity.sprites || []) {
+            spritesValuess.push({
+                sprites: spriteList, width: entity.width!, height: entity.height!
+            })
+        }
+
+        const newHash = getSpritesValuesHash(spritesValuess)
+
+        if (!pixiEntity || newHash != pixiEntity.hash) {
+            console.log('newHash', newHash, pixiEntity?.hash)
+            const spriteCount = entity.sprites![0].length
+
+            const textureLists: Texture[][] = [];
+            for (let spriteIndex = 0; spriteIndex < spriteCount; spriteIndex++) {
+                const spritesByIndex = []
+                for (let animationIndex = 0; animationIndex < entity.sprites!.length; animationIndex++) {
+                    spritesByIndex.push(entity.sprites![animationIndex][spriteIndex])
                 }
-                return
+                textureLists.push(await getSpritesAsTextures({
+                    sprites: spritesByIndex, width: entity.width!, height: entity.height!
+                }))
+            }
+
+            if (!pixiEntity) {
+                // Create a new animated sprite for each sprite
+                // Currently, sprites is an array where the first index
+                // is animation index, then the second index is the sprite index
+                // We want to flip this so that the first index is the sprite index
+                // and the second index is the animation index
+
+                const animatedSprites: AnimatedSprite[] = []
+
+                for (const textureList of textureLists) {
+                    const sprite = new AnimatedSprite(textureList)
+                    sprite.play()
+                    sprite.animationSpeed = 0.1
+                    animatedSprites.push(sprite)
+                    this.app.stage.addChild(sprite)
+                }
+
+                this.pixiEntities[entity.id] = {
+                    hash: newHash,
+                    sprites: animatedSprites,
+                }
+                pixiEntity = this.pixiEntities[entity.id]
+            } else {
+                for (let spriteIndex = 0; spriteIndex < spriteCount; spriteIndex++) {
+                    const sprite = pixiEntity.sprites[spriteIndex]
+                    if (!sprite) {
+                        debugger;
+                    }
+                    sprite.textures = textureLists[spriteIndex]
+                    sprite.play()
+                    // console.log('sprite', sprite.textures.length, textureLists[spriteIndex])
+                    // sprite.play()
+                    // console.log('sprite', sprite.textures.length, spriteIndex, sprite)
+                }
+                pixiEntity.hash = newHash
             }
         }
 
-        const spritesCanvas = await getSpritesAsCanvas({
-            sprites, width: entity.width, height: entity.height
-        })
-        ctx.drawImage(
-            spritesCanvas,
-            x + entity.x_offset + shakeX,
-            y + entity.y_offset + shakeY,
-            entity.width,
-            entity.height
-        )
+        if (entity.animation_speed == 0) {
+            pixiEntity.sprites.forEach(sprite => sprite.gotoAndStop(0))
+        }
+
+        pixiEntity.sprites.forEach(sprite => sprite.x = x + (entity.x_offset || 0) + shakeX)
+        pixiEntity.sprites.forEach(sprite => sprite.y = y + (entity.y_offset || 0) + shakeY)
 
         // Draw a dot at the x/y of the entity
         // this.drawText(ctx, entity.id, x, y, 'red')
 
-        if (entity.nickname) {
-            this.drawText(ctx, entity.nickname, x, y - 20, 'black')
-        }
+        // if (entity.nickname) {
+        //     this.drawText(ctx, entity.nickname, x, y - 20, 'black')
+        // }
     }
 
-    setBackground(backgroundTileMap: BackgroundTileMap) {
-        this.backgroundTileMap = backgroundTileMap
-        this.rebuildBackground();
-    }
+    // setBackground(backgroundTileMap: BackgroundTileMap) {
+    //     this.backgroundTileMap = backgroundTileMap
+    //     this.rebuildBackground();
+    // }
 
-    async rebuildBackground() {
-        if (!this.canvas || !this.backgroundTileMap) {
-            return
-        }
-        const invisibleCanvas = document.createElement('canvas')
+    // async rebuildBackground() {
+    //     if (!this.canvas || !this.backgroundTileMap) {
+    //         return
+    //     }
+    //     const invisibleCanvas = document.createElement('canvas')
 
-        const waterSize = 100 * 32;
+    //     const waterSize = 100 * 32;
 
-        invisibleCanvas.width = this.mapSize[2] + waterSize;
-        invisibleCanvas.height = this.mapSize[3] + waterSize;
-        const ctx = invisibleCanvas.getContext('2d', {
-            alpha: false,
-            willReadFrequently: true,
-        })!
-        if (!ctx) {
-            return
-        }
-        ctx.imageSmoothingEnabled = false;
+    //     invisibleCanvas.width = this.mapSize[2] + waterSize;
+    //     invisibleCanvas.height = this.mapSize[3] + waterSize;
+    //     const ctx = invisibleCanvas.getContext('2d', {
+    //         alpha: false,
+    //         willReadFrequently: true,
+    //     })!
+    //     if (!ctx) {
+    //         return
+    //     }
+    //     ctx.imageSmoothingEnabled = false;
 
-        const originX = 0, originY = 0
-        const minX = this.mapSize[0], minY = this.mapSize[1]
-        const maxX = this.mapSize[2], maxY = this.mapSize[3]
+    //     const originX = 0, originY = 0
+    //     const minX = this.mapSize[0], minY = this.mapSize[1]
+    //     const maxX = this.mapSize[2], maxY = this.mapSize[3]
 
-        ctx.clearRect(originX, originY, maxX, maxY)
+    //     ctx.clearRect(originX, originY, maxX, maxY)
 
-        interface TileMap {
-            topLeft: Sprite,
-            top: Sprite,
-            topRight: Sprite,
-            left: Sprite,
-            center: Sprite,
-            right: Sprite,
-            bottomLeft: Sprite,
-            bottom: Sprite,
-            bottomRight: Sprite,
-            extra1: Sprite,
-            extra2: Sprite,
-            extra3: Sprite,
-            extra4: Sprite,
-            extra5: Sprite,
-            extra6: Sprite,
-            extra7: Sprite,
-            water: Sprite,
-        }
+    //     interface TileMap {
+    //         topLeft: Sprite,
+    //         top: Sprite,
+    //         topRight: Sprite,
+    //         left: Sprite,
+    //         center: Sprite,
+    //         right: Sprite,
+    //         bottomLeft: Sprite,
+    //         bottom: Sprite,
+    //         bottomRight: Sprite,
+    //         extra1: Sprite,
+    //         extra2: Sprite,
+    //         extra3: Sprite,
+    //         extra4: Sprite,
+    //         extra5: Sprite,
+    //         extra6: Sprite,
+    //         extra7: Sprite,
+    //         water: Sprite,
+    //     }
 
-        const tileMap: TileMap = this.backgroundTileMap.grass as any;
+    //     const tileMap: TileMap = this.backgroundTileMap.grass as any;
 
-        const drawSprite = async (x: number, y: number, sprite: Sprite) => {
-            ctx.drawImage(
-                await getImg(sprite.url),
-                sprite.x, sprite.y, sprite.width, sprite.height,
-                x, y, 32, 32
-            );
-        }
+    //     const drawSprite = async (x: number, y: number, sprite: Sprite) => {
+    //         ctx.drawImage(
+    //             await getImg(sprite.url),
+    //             sprite.x, sprite.y, sprite.width, sprite.height,
+    //             x, y, 32, 32
+    //         );
+    //     }
 
-        for (let x = originX - waterSize; x < maxX + waterSize; x += 32) {
-            for (let y = originY - waterSize; y < maxY + waterSize; y += 32) {
-                if (x < minX || x > maxX || y < minY || y > maxY) {
-                    // Draw water
-                    await drawSprite(x, y, tileMap.water)
-                    continue
-                }
-                if (x == minX) {
-                    // Left side
-                    if (y == minY) {
-                        // Top left
-                        await drawSprite(x, y, tileMap.topLeft)
-                    } else if (y == maxY) {
-                        // Bottom left
-                        await drawSprite(x, y, tileMap.bottomLeft)
-                    } else {
-                        // Left
-                        await drawSprite(x, y, tileMap.left)
-                    }
-                } else if (x == maxX) {
-                    // Right side
-                    if (y == minY) {
-                        // Top right
-                        await drawSprite(x, y, tileMap.topRight)
-                    } else if (y == maxY) {
-                        // Bottom right
-                        await drawSprite(x, y, tileMap.bottomRight)
-                    } else {
-                        // Right
-                        await drawSprite(x, y, tileMap.right)
-                    }
-                } else if (y == minY) {
-                    // Top
-                    await drawSprite(x, y, tileMap.top)
-                } else if (y == maxY) {
-                    // Bottom
-                    await drawSprite(x, y, tileMap.bottom)
-                } else {
-                    // Center
-                    await drawSprite(x, y, tileMap.center)
-                }
-                if (Math.random() < 0.2) {
-                    // Draw a random sprite extra1, extra2, extra3
-                    // @ts-ignore
-                    const sprite = tileMap[`extra${Math.floor(Math.random() * 6) + 1}`]
-                    await drawSprite(x, y, sprite)
-                }
-            }
-        }
+    //     for (let x = originX - waterSize; x < maxX + waterSize; x += 32) {
+    //         for (let y = originY - waterSize; y < maxY + waterSize; y += 32) {
+    //             if (x < minX || x > maxX || y < minY || y > maxY) {
+    //                 // Draw water
+    //                 await drawSprite(x, y, tileMap.water)
+    //                 continue
+    //             }
+    //             if (x == minX) {
+    //                 // Left side
+    //                 if (y == minY) {
+    //                     // Top left
+    //                     await drawSprite(x, y, tileMap.topLeft)
+    //                 } else if (y == maxY) {
+    //                     // Bottom left
+    //                     await drawSprite(x, y, tileMap.bottomLeft)
+    //                 } else {
+    //                     // Left
+    //                     await drawSprite(x, y, tileMap.left)
+    //                 }
+    //             } else if (x == maxX) {
+    //                 // Right side
+    //                 if (y == minY) {
+    //                     // Top right
+    //                     await drawSprite(x, y, tileMap.topRight)
+    //                 } else if (y == maxY) {
+    //                     // Bottom right
+    //                     await drawSprite(x, y, tileMap.bottomRight)
+    //                 } else {
+    //                     // Right
+    //                     await drawSprite(x, y, tileMap.right)
+    //                 }
+    //             } else if (y == minY) {
+    //                 // Top
+    //                 await drawSprite(x, y, tileMap.top)
+    //             } else if (y == maxY) {
+    //                 // Bottom
+    //                 await drawSprite(x, y, tileMap.bottom)
+    //             } else {
+    //                 // Center
+    //                 await drawSprite(x, y, tileMap.center)
+    //             }
+    //             if (Math.random() < 0.2) {
+    //                 // Draw a random sprite extra1, extra2, extra3
+    //                 // @ts-ignore
+    //                 const sprite = tileMap[`extra${Math.floor(Math.random() * 6) + 1}`]
+    //                 await drawSprite(x, y, sprite)
+    //             }
+    //         }
+    //     }
 
-        // Save the background canvas as this.backgroundImage (image objects)
-        const backgroundImage = new Image()
-        backgroundImage.src = invisibleCanvas.toDataURL()
-        await new Promise((resolve) => {
-            backgroundImage.onerror = () => {
-                resolve(null)
-            }
-            backgroundImage.onload = () => {
-                backgroundImage.decode().then(() => {
-                    this.backgroundImage = backgroundImage
-                    resolve(null)
-                }).catch((e) => {
-                    console.error(e)
-                    resolve(null)
-                });
-            }
-        })
-        this.backgroundImage = backgroundImage
-    }
+    //     // Save the background canvas as this.backgroundImage (image objects)
+    //     const backgroundImage = new Image()
+    //     backgroundImage.src = invisibleCanvas.toDataURL()
+    //     await new Promise((resolve) => {
+    //         backgroundImage.onerror = () => {
+    //             resolve(null)
+    //         }
+    //         backgroundImage.onload = () => {
+    //             backgroundImage.decode().then(() => {
+    //                 this.backgroundImage = backgroundImage
+    //                 resolve(null)
+    //             }).catch((e) => {
+    //                 console.error(e)
+    //                 resolve(null)
+    //             });
+    //         }
+    //     })
+    //     this.backgroundImage = backgroundImage
+    // }
 
-    drawBackground() {
-        if (!this.canvas || !this.backgroundImage) {
-            return
-        }
-        const ctx = this.canvas.getContext('2d')
-        if (!ctx) {
-            return
-        }
+    // drawBackground() {
+    //     if (!this.canvas || !this.backgroundImage) {
+    //         return
+    //     }
+    //     const ctx = this.canvas.getContext('2d')
+    //     if (!ctx) {
+    //         return
+    //     }
 
-        if (!this.playerId) {
-            // Draw entire background (Find out what 0, 0 means in the current view)
-            // And draw the background from there
-            const { x, y } = this.convertCoordinates(0, 0)
+    //     if (!this.playerId) {
+    //         // Draw entire background (Find out what 0, 0 means in the current view)
+    //         // And draw the background from there
+    //         const { x, y } = this.convertCoordinates(0, 0)
     
-            ctx.drawImage(this.backgroundImage, x, y)
-        } else {
-            // Draw only the visible part of the background
+    //         ctx.drawImage(this.backgroundImage, x, y)
+    //     } else {
+    //         // Draw only the visible part of the background
 
-            // This is the coordinates of the start of the visible
-            // part of the background
-            const minX = this.playerX - this.canvas.width
-            const minY = this.playerY - this.canvas.height
+    //         // This is the coordinates of the start of the visible
+    //         // part of the background
+    //         const minX = this.playerX - this.app.renderer.width
+    //         const minY = this.playerY - this.app.renderer.height
 
-            // Find where we want to draw it in current context
-            const { x: drawX, y: drawY } = this.convertCoordinates(
-                minX,
-                minY
-            )
+    //         // Find where we want to draw it in current context
+    //         const { x: drawX, y: drawY } = this.convertCoordinates(
+    //             minX,
+    //             minY
+    //         )
 
-            const width = this.canvas.width * 3
-            const height = this.canvas.height * 3
+    //         const width = this.app.renderer.width * 3
+    //         const height = this.app.renderer.height * 3
 
-            ctx.drawImage(
-                this.backgroundImage,
-                minX, minY, width, height,
-                drawX, drawY, width, height
-            )
-        }
+    //         ctx.drawImage(
+    //             this.backgroundImage,
+    //             minX, minY, width, height,
+    //             drawX, drawY, width, height
+    //         )
+    //     }
 
-    }
+    // }
 }
 
 
-export function drawGameMap(canvas: HTMLCanvasElement, globalEntityMap: EntityMap, playerId: string | null, mapSize: number[]) {
-    const mapDrawer = new MapDrawer(globalEntityMap, canvas, playerId, mapSize)
-    mapDrawer.redrawAllEntities();
+export function drawGameMap(app: Application, globalEntityMap: EntityMap, playerId: string | null, mapSize: number[]) {
+    const mapDrawer = new MapDrawer(app, globalEntityMap, playerId, mapSize)
+    app.ticker.add(() => {
+        mapDrawer.updateAllEntities();
+    });
     (window as any).mapDrawer = mapDrawer;
     return mapDrawer;
 }

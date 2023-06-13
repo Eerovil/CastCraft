@@ -8,6 +8,7 @@ import { Item } from './apiTypes.ts'
 import * as Sentry from "@sentry/browser";
 import { initializeTopBar } from './topBar.ts'
 import './polyfills.ts'
+import { Application } from 'pixi.js'
 
 
 Sentry.init({
@@ -31,8 +32,7 @@ if(typeof console === "undefined"){
 }
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <canvas id="game-map"></canvas>
+  <div id="main-container">
     <div id="touch-element"></div>
     <div id="inventory"></div>
     <div id="top-bar"></div>
@@ -59,6 +59,13 @@ async function main() {
   (window as any).spritesDrawn = 0
   const globalEntityMap: EntityMap = {}
   const isMobile = window.innerWidth < 600
+  const pixiApp = new Application({
+    // resizeTo: window,
+  });
+  document.querySelector<HTMLCanvasElement>('#main-container')!.insertBefore(
+    pixiApp.view as unknown as Node,
+    document.querySelector<HTMLDivElement>('#touch-element')!,
+  )
 
   let nickname: string = parseQueryParams()['nickname']
 
@@ -106,11 +113,9 @@ async function main() {
   }
 
   console.log('main: ', globalEntityMap)
-  const canvas = document.querySelector<HTMLCanvasElement>('#game-map')!
-  canvas.width = window.innerWidth
-  canvas.height = window.innerHeight
-  const gameMap = drawGameMap(canvas, globalEntityMap, playerId, mapSize)
-  gameMap.setBackground(backgroundTileMap,)
+  // @ts-ignore
+  const gameMap = drawGameMap(pixiApp, globalEntityMap, playerId, mapSize)
+  // gameMap.setBackground(backgroundTileMap,)
   const touchElement = document.querySelector<HTMLDivElement>('#touch-element')!
   const touchCallbacks = {
     tapNextToPlayer: (direction: number) => {

@@ -1,5 +1,5 @@
+import { Rectangle, Texture } from "pixi.js";
 import { Sprite } from "./apiTypes";
-import { getImg } from "./imgUtils";
 
 
 type SpritesValues = {
@@ -35,50 +35,63 @@ function hashSpritesValues(values: SpritesValues): SpritesHash {
 
 
 class PreRenderSingleton {
-    prerenderedSprites: { [key: string]: HTMLCanvasElement } = {}
+    prerenderedSprites: { [key: string]: Texture[] } = {}
+    fullSheetTextures: { [key: string]: Texture } = {}
 
-    async getPrerenderedSprite(values: SpritesValues) {
+    async getTextureList(values: SpritesValues): Promise<Texture[]> {
         const hash = hashSpritesValues(values)
         if (!(hash in this.prerenderedSprites)) {
-            await this.prerenderSprite(hash, values)
+            const sprite = await this.prerenderSprites(values.sprites)
+            this.prerenderedSprites[hash] = sprite
         }
         return this.prerenderedSprites[hash]
     }
 
-    private async prerenderSprite(hash: SpritesHash, values: SpritesValues) {
-        const canvas = document.createElement('canvas')
-        canvas.width = values.width
-        canvas.height = values.height
-        const ctx = canvas.getContext('2d', {
-            willReadFrequently: true,
-        })!
-        ctx.imageSmoothingEnabled = false
-
-        const urlToImg: { [key: string]: HTMLImageElement } = {}
-        for (const sprite of values.sprites) {
-            urlToImg[sprite.url] = await getImg(sprite.url)
+    private async getFullSheetTexture(url: string): Promise<Texture> {
+        if (!(url in this.fullSheetTextures)) {
+            const texture = await Texture.fromURL(url);
+            this.fullSheetTextures[url] = texture
         }
+        return this.fullSheetTextures[url]
+    }
 
-        for (const sprite of values.sprites) {
-            const img = urlToImg[sprite.url]
-            try {
-                ctx.drawImage(
-                    img,
-                    sprite.x, sprite.y, sprite.width, sprite.height,
-                    0, 0, values.width, values.height
-                );
-            } catch (e) {
-                console.error(e)
-            }
+    private async prerenderSprites(sprites: Sprite[]): Promise<Texture[]> {
+        // Create a Texture from each sprite
+        // Then create a Texture that is a composite of all the sprites
+
+        const urls = sprites.map(sprite => sprite.url);
+        const textureArray = [];
+
+        for (let i = 0; i < sprites.length; i++)
+        {
+            const fullTexture = await this.getFullSheetTexture(urls[i])
+            const spriteSize = new Rectangle(
+                sprites[i].x,
+                sprites[i].y,
+                sprites[i].width,
+                sprites[i].height
+            )
+            const texture = new Texture(fullTexture.baseTexture, spriteSize, spriteSize);
+            textureArray.push(texture);
         }
-
-        this.prerenderedSprites[hash] = canvas
+        
+        return textureArray;
     }
 }
 
 const preRenderSingleton = new PreRenderSingleton()
 
 
-export async function getSpritesAsCanvas(values: SpritesValues) {
-    return await preRenderSingleton.getPrerenderedSprite(values)
+export function getSpritesValuesHash(values: SpritesValues[]): SpritesHash {
+    let hash = ''
+    for (const value of values) {
+        hash += hashSpritesValues(value)
+    }
+    return hash
+}
+
+
+export async function getSpritesAsTextures(values: SpritesValues): Promise<Texture[]> {
+    const textures = await preRenderSingleton.getTextureList(values)
+    return textures
 }
