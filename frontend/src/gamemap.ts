@@ -11,6 +11,7 @@ function sortBy(arr: Array<any>, callback: (item: any) => number) {
 
 
 type PixiEntity = {
+    entityID: string
     hash: string
     sprites: AnimatedSprite[]
 }
@@ -87,6 +88,7 @@ class MapDrawer {
         for (const entity of sortedEntities) {
             await this.updateEntity(entity)
         }
+        this.removeDeletedEntities()
         this.animationIndex += 1
     }
 
@@ -179,6 +181,17 @@ class MapDrawer {
         //     y: y - (this.playerY - (this.app.screen.height / 2)) - 32,
         // }
         return { x, y }
+    }
+
+    async removeDeletedEntities() {
+        for (const pixiEntity of Object.values(this.pixiEntities)) {
+            if (!this.entities[pixiEntity.entityID]) {
+                pixiEntity.sprites.forEach((sprite) => {
+                    this.app.stage.removeChild(sprite)
+                })
+                delete this.pixiEntities[pixiEntity.entityID]
+            }
+        }
     }
 
     async updateEntity(entity: Entity) {
@@ -290,6 +303,7 @@ class MapDrawer {
                 }
 
                 this.pixiEntities[entity.id] = {
+                    entityID: entity.id,
                     hash: newHash,
                     sprites: animatedSprites,
                 }
