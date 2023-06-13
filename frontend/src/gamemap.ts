@@ -250,8 +250,8 @@ class MapDrawer {
 
         if (entity.id == this.playerId) {
             this.app.stage.pivot.copyFrom({
-                x: x,
-                y: y,
+                x: x - (entity.x_offset || 0),
+                y: y - (entity.y_offset || 0),
             })
         }
 
@@ -296,6 +296,8 @@ class MapDrawer {
 
                 for (const textureList of textureLists) {
                     const sprite = new AnimatedSprite(textureList)
+                    const scale = entity.width! / sprite.width
+                    sprite.scale.set(scale, scale)
                     sprite.play()
                     sprite.animationSpeed = 0.1
                     animatedSprites.push(sprite)
