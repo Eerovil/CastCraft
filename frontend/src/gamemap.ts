@@ -298,8 +298,8 @@ class MapDrawer {
                     const sprite = new AnimatedSprite(textureList)
                     const scale = entity.width! / sprite.width
                     sprite.scale.set(scale, scale)
+                    sprite.loop = true
                     sprite.play()
-                    sprite.animationSpeed = 0.1
                     animatedSprites.push(sprite)
                     this.app.stage.addChild(sprite)
                 }
@@ -317,7 +317,8 @@ class MapDrawer {
                         debugger;
                     }
                     sprite.textures = textureLists[spriteIndex]
-                    sprite.play()
+                    sprite.loop = true
+                    sprite.gotoAndPlay(0)
                     // console.log('sprite', sprite.textures.length, textureLists[spriteIndex])
                     // sprite.play()
                     // console.log('sprite', sprite.textures.length, spriteIndex, sprite)
@@ -328,6 +329,13 @@ class MapDrawer {
 
         if (entity.animation_speed == 0) {
             pixiEntity.sprites.forEach(sprite => sprite.gotoAndStop(0))
+        } else {
+            pixiEntity.sprites.forEach(sprite => {
+                sprite.animationSpeed = (entity.animation_speed || 0) / 10;
+                if (!sprite.playing && sprite.textures.length > 1) {
+                    sprite.play()
+                }
+            });
         }
 
         pixiEntity.sprites.forEach(sprite => sprite.x = x + (entity.x_offset || 0) + shakeX)

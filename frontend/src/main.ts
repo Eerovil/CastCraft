@@ -9,6 +9,7 @@ import * as Sentry from "@sentry/browser";
 import { initializeTopBar } from './topBar.ts'
 import './polyfills.ts'
 import { Application } from 'pixi.js'
+import * as PIXI from 'pixi.js';
 
 
 Sentry.init({
@@ -59,9 +60,13 @@ async function main() {
   (window as any).spritesDrawn = 0
   const globalEntityMap: EntityMap = {}
   const isMobile = window.innerWidth < 600
+
+  PIXI.settings.SCALE_MODE = isMobile ? PIXI.SCALE_MODES.NEAREST : PIXI.SCALE_MODES.LINEAR
   const pixiApp = new Application({
     // resizeTo: window,
   });
+  pixiApp.ticker.minFPS = 25;
+  pixiApp.ticker.maxFPS = 30;
   document.querySelector<HTMLCanvasElement>('#main-container')!.insertBefore(
     pixiApp.view as unknown as Node,
     document.querySelector<HTMLDivElement>('#touch-element')!,
