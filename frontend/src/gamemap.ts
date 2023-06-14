@@ -1,5 +1,5 @@
 // @ts-ignore
-import { Application, Loader as PixiLoader, Texture, AnimatedSprite, RenderTexture, Sprite as StaticSprite, autoDetectRenderer, Rectangle } from 'pixi.js'
+import { Application, Loader as PixiLoader, Texture, AnimatedSprite, RenderTexture, Sprite as StaticSprite, autoDetectRenderer, Rectangle, Container } from 'pixi.js'
 import { Entity, Sprite as APISprite } from './apiTypes'
 import { getSpritesAsTextures, getSpritesValuesHash } from './drawUtils'
 import { BackgroundTileMap, EntityMap } from './moreTypes'
@@ -33,7 +33,7 @@ class MapDrawer {
     isMobile: boolean = true
 
     mapSize: number[] = [0, 0, 0, 0]
-    backgroundTexture: RenderTexture | null = null
+    backgroundContainer: Container | null = null
     backgroundTileMap: BackgroundTileMap | null = null
 
     predrawnTouchAreas: HTMLCanvasElement | null = null
@@ -271,7 +271,6 @@ class MapDrawer {
         const newHash = getSpritesValuesHash(spritesValuess)
 
         if (!pixiEntity || newHash != pixiEntity.hash) {
-            console.log('newHash', newHash, pixiEntity?.hash)
             const spriteCount = entity.sprites![0].length
 
             const textureLists: Texture[][] = [];
@@ -352,11 +351,16 @@ class MapDrawer {
     async setBackground(backgroundTileMap: BackgroundTileMap) {
         // Called from outside to set the background tile map
         this.backgroundTileMap = backgroundTileMap
-        const backgroundTexture = await this.rebuildBackground();
-        if (backgroundTexture) {
-            this.backgroundTexture = backgroundTexture;
-            const background = new StaticSprite(this.backgroundTexture);
-            this.app.stage.addChildAt(background, 0);
+        const backgroundContainer = await this.rebuildBackground();
+        if (backgroundContainer) {
+            this.backgroundContainer = backgroundContainer;
+            // const background = new StaticSprite(this.backgroundContainer);
+            // background.x = 0;
+            // background.y = 0;
+            // background.width = this.mapSize[2];
+            // background.height = this.mapSize[3];
+            this.app.stage.addChildAt(backgroundContainer, 0);
+            console.log('Added background', backgroundContainer)
         } else {
             console.error('Failed to build background texture')
         }
@@ -368,14 +372,12 @@ class MapDrawer {
             console.error('No background tile map set')
             return;
         }
-        const renderer = autoDetectRenderer();
+        const renderer = this.app.renderer;
+        renderer.background.color = "0xff0000";
 
-        const waterSize = 100 * 32;
+        const waterSize = 10 * 32;
 
-        const renderTexture: RenderTexture = RenderTexture.create({
-            width: this.mapSize[2] + waterSize,
-            height: this.mapSize[3] + waterSize
-        });
+        const backgroundContainer = new Container();
 
         const originX = 0, originY = 0
         const minX = this.mapSize[0], minY = this.mapSize[1]
@@ -404,7 +406,7 @@ class MapDrawer {
         const tileMap: TileMap = this.backgroundTileMap.grass as any;
         const firstSprite = tileMap.topLeft;
 
-        const fullTexture = Texture.from(firstSprite.url)
+        const fullTexture = await Texture.fromURL(firstSprite.url)
 
         const drawSprite = async (x: number, y: number, sprite: APISprite) => {
             // Create a pixi sprite from the APISprite using fullTexture.baseTexture
@@ -414,10 +416,17 @@ class MapDrawer {
                 sprite.width,
                 sprite.height
             )
+            // Texture that is the wanted tile
             const texture = new Texture(fullTexture.baseTexture, spriteSize, spriteSize);
-            const staticSprite: StaticSprite = StaticSprite.from(texture);
-            staticSprite.position.set(x, y);
-            renderer.render(staticSprite, { renderTexture });
+            // Create a sprite that is the wanted tile
+            const staticSprite: StaticSprite = new StaticSprite(texture);
+            staticSprite.position.x = x
+            staticSprite.position.y = y
+            staticSprite.width = 32
+            staticSprite.height = 32
+
+            backgroundContainer.addChild(staticSprite)
+
             // ctx.drawImage(
             //     await getImg(sprite.url),
             //     sprite.x, sprite.y, sprite.width, sprite.height,
@@ -475,7 +484,7 @@ class MapDrawer {
             }
         }
 
-        return renderTexture;
+        return backgroundContainer;
     }
 
     // drawBackground() {

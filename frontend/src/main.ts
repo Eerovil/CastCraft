@@ -61,10 +61,10 @@ async function main() {
   const globalEntityMap: EntityMap = {}
   const isMobile = window.innerWidth < 600
 
-  PIXI.settings.SCALE_MODE = isMobile ? PIXI.SCALE_MODES.NEAREST : PIXI.SCALE_MODES.LINEAR
   const pixiApp = new Application({
-    // resizeTo: window,
+    resizeTo: window,
   });
+  PIXI.BaseTexture.defaultOptions.scaleMode = PIXI.SCALE_MODES.NEAREST;
   pixiApp.ticker.minFPS = 25;
   pixiApp.ticker.maxFPS = 30;
   document.querySelector<HTMLCanvasElement>('#main-container')!.insertBefore(
