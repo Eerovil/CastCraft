@@ -1,5 +1,6 @@
 // @ts-ignore
 import { Application, Loader as PixiLoader, Texture, AnimatedSprite, RenderTexture, Sprite as StaticSprite, autoDetectRenderer, Rectangle, Container } from 'pixi.js'
+import * as PIXI from 'pixi.js'
 import { Entity, Sprite as APISprite } from './apiTypes'
 import { getSpritesAsTextures, getSpritesValuesHash } from './drawUtils'
 import { BackgroundTileMap, EntityMap } from './moreTypes'
@@ -36,8 +37,7 @@ class MapDrawer {
     backgroundContainer: Container | null = null
     backgroundTileMap: BackgroundTileMap | null = null
 
-    predrawnTouchAreas: HTMLCanvasElement | null = null
-    predrawnTexts: { [key: string]: HTMLCanvasElement } = {}
+    touchAreasSprite: Container | null = null
 
     constructor(app: Application, globalEntityMap: EntityMap, playerId: string | null, mapSize: number[]) {
         this.entities = globalEntityMap
@@ -68,51 +68,28 @@ class MapDrawer {
             this.app.stage.scale.set(3)
             this.app.stage.sortableChildren = true
 
-            // ctx.scale(2, 2)
-            // ctx.translate(canvas.width / 2, canvas.height / 2)
-            // const scale = 3
-            // const widthNew = ctx.canvas.width / 2;
-            // const heightNew = ctx.canvas.height / 2;
-            // ctx.setTransform(scale, 0, 0, scale, -(scale - 1) * widthNew, -(scale - 1) * heightNew);
+            this.touchAreasSprite = this.createTouchAreasSprite();
+            this.app.stage.addChild(this.touchAreasSprite);
+
             console.log('isMobile', player.x, player.y, this.app.stage.position)
         }
     }
 
-    async updateAllEntities() {
-        const sortedEntities = sortBy(
-            sortBy(Object.values(this.entities), (entity) => entity.y),
-            (entity) => entity.carried_by_entity_id ? 1 : -1,
-        )
-        // if (this.playerId) {
-        //     this.drawTouchAreas()
-        // }
-        for (const entity of sortedEntities) {
-            await this.updateEntity(entity)
-        }
-        this.removeDeletedEntities()
-        this.animationIndex += 1
-    }
-
-    predrawTouchAreas() {
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d', {
-            willReadFrequently: true,
-        })!
-        if (!ctx) {
-            throw new Error('Could not get canvas context')
-        }
-        // Draw a square above, below, left, and right of the player
+    createTouchAreasSprite() {
+        // Create a sprite with 32x32 squares above, below, left, and right of the center
         const touchAreaSize = 32
-        const touchAreaColor = 'rgba(255, 0, 0, 0.5)'
-        canvas.width = touchAreaSize * 3
-        canvas.height = touchAreaSize * 3
+        const touchAreasContainer = new Container();
 
-        ctx.imageSmoothingEnabled = false;
-        ctx.fillStyle = touchAreaColor
         const drawRect = (x: number, y: number) => {
-            ctx.strokeStyle = 'green';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(x, y, touchAreaSize, touchAreaSize);
+            var graphics = new PIXI.Graphics();
+
+            // set the line style to have a width of 5 and set the color to green
+            graphics.lineStyle(1, 0x00ff00);
+
+            // draw a rectangle
+            graphics.drawRect(x, y, touchAreaSize, touchAreaSize);
+
+            touchAreasContainer.addChild(graphics);
         }
 
         let x = touchAreaSize
@@ -123,65 +100,18 @@ class MapDrawer {
         drawRect(x, y - touchAreaSize)
         drawRect(x, y + touchAreaSize)
 
-        this.predrawnTouchAreas = canvas
+        touchAreasContainer.zIndex = 0
+        touchAreasContainer.pivot.set(touchAreaSize * 2 - 16, touchAreaSize * 2)
+        return touchAreasContainer
     }
 
-    // drawTouchAreas() {
-    //     const ctx = this.ctx;
-    //     const player = this.entities[this.playerId!]
-    //     if (!player) {
-    //         return
-    //     }
-    //     if (!this.predrawnTouchAreas) {
-    //         this.predrawTouchAreas()
-    //     }
-    //     const predrawnTouchAreas = this.predrawnTouchAreas as HTMLCanvasElement
-    //     // const { x, y } = this.convertCoordinates(player.x, player.y)
-    //     const { x, y } = this.convertCoordinates(player.x, player.y)
-    //     const touchAreaSize = 32
-    //     ctx.drawImage(predrawnTouchAreas, x - touchAreaSize, y - touchAreaSize)
-    // }
-
-    drawText(ctx2: CanvasRenderingContext2D, text: string, x: number, y: number, color: string = 'black') {
-        if (text in this.predrawnTexts) {
-            const canvas = this.predrawnTexts[text]
-            ctx2.drawImage(canvas, x, y)
-            return
+    async updateAllEntities() {
+        const entities = Object.values(this.entities);
+        for (const entity of entities) {
+            await this.updateEntity(entity)
         }
-        const canvas = document.createElement('canvas')
-        canvas.width = 100
-        canvas.height = 100
-        const ctx = canvas.getContext('2d', {
-            willReadFrequently: true,
-        })!
-        if (!ctx) {
-            throw new Error('Could not get canvas context')
-        }
-        ctx.imageSmoothingEnabled = false;
-        ctx.font = '16px Arial'
-        ctx.fillStyle = color
-        ctx.fillText(text, 0, 16)
-        this.predrawnTexts[text] = canvas
-        ctx2.drawImage(canvas, x, y)
-    }
-
-    convertCoordinates(x: number, y: number) {
-        // If playerId is set, center on player
-        // New origin is at player x - (canvas.width / 2), player y - (canvas.height / 2)
-        // So we must subtract that from the coordinates
-        // if (!this.playerId) {
-        //     return { x, y }
-        // }
-        // const player = this.entities[this.playerId]
-        // if (!player) {
-        //     return { x, y }
-        // }
-        // console.log('convertCoordinates', x, y, this.playerX, this.playerY, this.app.screen.width, this.app.screen.height)
-        // return {
-        //     x: x - (this.playerX - (this.app.screen.width / 2)) - (32 / 2),
-        //     y: y - (this.playerY - (this.app.screen.height / 2)) - 32,
-        // }
-        return { x, y }
+        this.removeDeletedEntities()
+        this.animationIndex += 1
     }
 
     async removeDeletedEntities() {
@@ -231,14 +161,6 @@ class MapDrawer {
             }
         }
 
-        // if (entity.animation_speed == 0) {
-        //     // Only draw the first sprite
-        //     animationIndex = 0
-        // } else {
-        //     // Draw the sprite at the current animation frame
-        //     animationIndex = Math.floor(this.animationIndex / (entity.animation_speed || 1))
-        // }
-
         let shakeX = 0, shakeY = 0;
         for (const animation of entity.animations || []) {
             if (animation.type == 'shake') {
@@ -254,11 +176,10 @@ class MapDrawer {
                 x: x - (entity.x_offset || 0),
                 y: y - (entity.y_offset || 0),
             })
+            if (this.touchAreasSprite) {
+                this.touchAreasSprite.position.copyFrom(this.app.stage.pivot)
+            }
         }
-
-        const newCoords = this.convertCoordinates(x, y)
-        x = newCoords.x
-        y = newCoords.y
 
         let pixiEntity = this.pixiEntities[entity.id]
 
@@ -322,9 +243,6 @@ class MapDrawer {
                     sprite.textures = textureLists[spriteIndex]
                     sprite.loop = true
                     sprite.gotoAndPlay(0)
-                    // console.log('sprite', sprite.textures.length, textureLists[spriteIndex])
-                    // sprite.play()
-                    // console.log('sprite', sprite.textures.length, spriteIndex, sprite)
                 }
                 pixiEntity.hash = newHash
             }
@@ -341,16 +259,15 @@ class MapDrawer {
             });
         }
 
-        pixiEntity.sprites.forEach(sprite => sprite.zIndex = entity.y);
+        let zIndex = entity.y;
+        if (entity.carried_by_entity_id) {
+            zIndex += 32;
+        }
+
+        pixiEntity.sprites.forEach(sprite => sprite.zIndex = zIndex);
         pixiEntity.sprites.forEach(sprite => sprite.x = x + (entity.x_offset || 0) + shakeX)
         pixiEntity.sprites.forEach(sprite => sprite.y = y + (entity.y_offset || 0) + shakeY)
 
-        // Draw a dot at the x/y of the entity
-        // this.drawText(ctx, entity.id, x, y, 'red')
-
-        // if (entity.nickname) {
-        //     this.drawText(ctx, entity.nickname, x, y - 20, 'black')
-        // }
     }
 
     async setBackground(backgroundTileMap: BackgroundTileMap) {
@@ -359,12 +276,8 @@ class MapDrawer {
         const backgroundContainer = await this.rebuildBackground();
         if (backgroundContainer) {
             this.backgroundContainer = backgroundContainer;
-            // const background = new StaticSprite(this.backgroundContainer);
-            // background.x = 0;
-            // background.y = 0;
-            // background.width = this.mapSize[2];
-            // background.height = this.mapSize[3];
-            this.app.stage.addChildAt(backgroundContainer, 0);
+            backgroundContainer.zIndex = -1000;
+            this.app.stage.addChild(backgroundContainer);
             console.log('Added background', backgroundContainer)
         } else {
             console.error('Failed to build background texture')
@@ -431,12 +344,6 @@ class MapDrawer {
             staticSprite.height = 32
 
             backgroundContainer.addChild(staticSprite)
-
-            // ctx.drawImage(
-            //     await getImg(sprite.url),
-            //     sprite.x, sprite.y, sprite.width, sprite.height,
-            //     x, y, 32, 32
-            // );
         }
 
         for (let x = originX - waterSize; x < maxX + waterSize; x += 32) {
@@ -492,46 +399,6 @@ class MapDrawer {
         return backgroundContainer;
     }
 
-    // drawBackground() {
-    //     if (!this.canvas || !this.backgroundImage) {
-    //         return
-    //     }
-    //     const ctx = this.canvas.getContext('2d')
-    //     if (!ctx) {
-    //         return
-    //     }
-
-    //     if (!this.playerId) {
-    //         // Draw entire background (Find out what 0, 0 means in the current view)
-    //         // And draw the background from there
-    //         const { x, y } = this.convertCoordinates(0, 0)
-    
-    //         ctx.drawImage(this.backgroundImage, x, y)
-    //     } else {
-    //         // Draw only the visible part of the background
-
-    //         // This is the coordinates of the start of the visible
-    //         // part of the background
-    //         const minX = this.playerX - this.app.renderer.width
-    //         const minY = this.playerY - this.app.renderer.height
-
-    //         // Find where we want to draw it in current context
-    //         const { x: drawX, y: drawY } = this.convertCoordinates(
-    //             minX,
-    //             minY
-    //         )
-
-    //         const width = this.app.renderer.width * 3
-    //         const height = this.app.renderer.height * 3
-
-    //         ctx.drawImage(
-    //             this.backgroundImage,
-    //             minX, minY, width, height,
-    //             drawX, drawY, width, height
-    //         )
-    //     }
-
-    // }
 }
 
 

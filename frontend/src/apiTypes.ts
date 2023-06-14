@@ -44,6 +44,8 @@ export interface Entity {
   holding?: Item;
   on_touch?: "move" | "swing" | "to_inventory" | "pick_up";
   inventory?: Inventory;
+  carried_by_entity_id?: string;
+  carrying_entity_id?: string;
 }
 export interface Sprite {
   url: string;
