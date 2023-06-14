@@ -65,7 +65,8 @@ class MapDrawer {
                 window.innerWidth / 2,
                 window.innerHeight / 2,
             )
-            this.app.stage.scale.set(4)
+            this.app.stage.scale.set(3)
+            this.app.stage.sortableChildren = true
 
             // ctx.scale(2, 2)
             // ctx.translate(canvas.width / 2, canvas.height / 2)
@@ -284,6 +285,9 @@ class MapDrawer {
                 }))
             }
 
+            // Check again
+            pixiEntity = this.pixiEntities[entity.id]
+
             if (!pixiEntity) {
                 // Create a new animated sprite for each sprite
                 // Currently, sprites is an array where the first index
@@ -330,13 +334,14 @@ class MapDrawer {
             pixiEntity.sprites.forEach(sprite => sprite.gotoAndStop(0))
         } else {
             pixiEntity.sprites.forEach(sprite => {
-                sprite.animationSpeed = (entity.animation_speed || 0) / 10;
+                sprite.animationSpeed = ((entity.animation_speed || 0) * 1.0) / 20.0;
                 if (!sprite.playing && sprite.textures.length > 1) {
                     sprite.play()
                 }
             });
         }
 
+        pixiEntity.sprites.forEach(sprite => sprite.zIndex = entity.y);
         pixiEntity.sprites.forEach(sprite => sprite.x = x + (entity.x_offset || 0) + shakeX)
         pixiEntity.sprites.forEach(sprite => sprite.y = y + (entity.y_offset || 0) + shakeY)
 
