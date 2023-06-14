@@ -6,10 +6,6 @@ import { getSpritesAsTextures, getSpritesValuesHash } from './drawUtils'
 import { BackgroundTileMap, EntityMap } from './moreTypes'
 import { getCurrentTime } from './timeUtils'
 
-function sortBy(arr: Array<any>, callback: (item: any) => number) {
-    return arr.sort((a: any, b: any) => callback(a) - callback(b))
-}
-
 
 type PixiEntity = {
     entityID: string
