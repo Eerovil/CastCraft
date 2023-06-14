@@ -1,6 +1,6 @@
 // @ts-ignore
-import { Application, Loader as PixiLoader, Texture, AnimatedSprite } from 'pixi.js'
-import { Entity } from './apiTypes'
+import { Application, Loader as PixiLoader, Texture, AnimatedSprite, RenderTexture, Sprite as StaticSprite, autoDetectRenderer, Rectangle } from 'pixi.js'
+import { Entity, Sprite as APISprite } from './apiTypes'
 import { getSpritesAsTextures, getSpritesValuesHash } from './drawUtils'
 import { BackgroundTileMap, EntityMap } from './moreTypes'
 import { getCurrentTime } from './timeUtils'
@@ -33,7 +33,7 @@ class MapDrawer {
     isMobile: boolean = true
 
     mapSize: number[] = [0, 0, 0, 0]
-    backgroundImage: HTMLImageElement | null = null
+    backgroundTexture: RenderTexture | null = null
     backgroundTileMap: BackgroundTileMap | null = null
 
     predrawnTouchAreas: HTMLCanvasElement | null = null
@@ -349,135 +349,134 @@ class MapDrawer {
         // }
     }
 
-    // setBackground(backgroundTileMap: BackgroundTileMap) {
-    //     this.backgroundTileMap = backgroundTileMap
-    //     this.rebuildBackground();
-    // }
+    async setBackground(backgroundTileMap: BackgroundTileMap) {
+        // Called from outside to set the background tile map
+        this.backgroundTileMap = backgroundTileMap
+        const backgroundTexture = await this.rebuildBackground();
+        if (backgroundTexture) {
+            this.backgroundTexture = backgroundTexture;
+            const background = new StaticSprite(this.backgroundTexture);
+            this.app.stage.addChildAt(background, 0);
+        } else {
+            console.error('Failed to build background texture')
+        }
+    }
 
-    // async rebuildBackground() {
-    //     if (!this.canvas || !this.backgroundTileMap) {
-    //         return
-    //     }
-    //     const invisibleCanvas = document.createElement('canvas')
+    async rebuildBackground() {
+        // return a RenderTexture that contains the background
+        if (!this.backgroundTileMap) {
+            console.error('No background tile map set')
+            return;
+        }
+        const renderer = autoDetectRenderer();
 
-    //     const waterSize = 100 * 32;
+        const waterSize = 100 * 32;
 
-    //     invisibleCanvas.width = this.mapSize[2] + waterSize;
-    //     invisibleCanvas.height = this.mapSize[3] + waterSize;
-    //     const ctx = invisibleCanvas.getContext('2d', {
-    //         alpha: false,
-    //         willReadFrequently: true,
-    //     })!
-    //     if (!ctx) {
-    //         return
-    //     }
-    //     ctx.imageSmoothingEnabled = false;
+        const renderTexture: RenderTexture = RenderTexture.create({
+            width: this.mapSize[2] + waterSize,
+            height: this.mapSize[3] + waterSize
+        });
 
-    //     const originX = 0, originY = 0
-    //     const minX = this.mapSize[0], minY = this.mapSize[1]
-    //     const maxX = this.mapSize[2], maxY = this.mapSize[3]
+        const originX = 0, originY = 0
+        const minX = this.mapSize[0], minY = this.mapSize[1]
+        const maxX = this.mapSize[2], maxY = this.mapSize[3]
 
-    //     ctx.clearRect(originX, originY, maxX, maxY)
+        interface TileMap {
+            topLeft: APISprite,
+            top: APISprite,
+            topRight: APISprite,
+            left: APISprite,
+            center: APISprite,
+            right: APISprite,
+            bottomLeft: APISprite,
+            bottom: APISprite,
+            bottomRight: APISprite,
+            extra1: APISprite,
+            extra2: APISprite,
+            extra3: APISprite,
+            extra4: APISprite,
+            extra5: APISprite,
+            extra6: APISprite,
+            extra7: APISprite,
+            water: APISprite,
+        }
 
-    //     interface TileMap {
-    //         topLeft: Sprite,
-    //         top: Sprite,
-    //         topRight: Sprite,
-    //         left: Sprite,
-    //         center: Sprite,
-    //         right: Sprite,
-    //         bottomLeft: Sprite,
-    //         bottom: Sprite,
-    //         bottomRight: Sprite,
-    //         extra1: Sprite,
-    //         extra2: Sprite,
-    //         extra3: Sprite,
-    //         extra4: Sprite,
-    //         extra5: Sprite,
-    //         extra6: Sprite,
-    //         extra7: Sprite,
-    //         water: Sprite,
-    //     }
+        const tileMap: TileMap = this.backgroundTileMap.grass as any;
+        const firstSprite = tileMap.topLeft;
 
-    //     const tileMap: TileMap = this.backgroundTileMap.grass as any;
+        const fullTexture = Texture.from(firstSprite.url)
 
-    //     const drawSprite = async (x: number, y: number, sprite: Sprite) => {
-    //         ctx.drawImage(
-    //             await getImg(sprite.url),
-    //             sprite.x, sprite.y, sprite.width, sprite.height,
-    //             x, y, 32, 32
-    //         );
-    //     }
+        const drawSprite = async (x: number, y: number, sprite: APISprite) => {
+            // Create a pixi sprite from the APISprite using fullTexture.baseTexture
+            const spriteSize = new Rectangle(
+                sprite.x,
+                sprite.y,
+                sprite.width,
+                sprite.height
+            )
+            const texture = new Texture(fullTexture.baseTexture, spriteSize, spriteSize);
+            const staticSprite: StaticSprite = StaticSprite.from(texture);
+            staticSprite.position.set(x, y);
+            renderer.render(staticSprite, { renderTexture });
+            // ctx.drawImage(
+            //     await getImg(sprite.url),
+            //     sprite.x, sprite.y, sprite.width, sprite.height,
+            //     x, y, 32, 32
+            // );
+        }
 
-    //     for (let x = originX - waterSize; x < maxX + waterSize; x += 32) {
-    //         for (let y = originY - waterSize; y < maxY + waterSize; y += 32) {
-    //             if (x < minX || x > maxX || y < minY || y > maxY) {
-    //                 // Draw water
-    //                 await drawSprite(x, y, tileMap.water)
-    //                 continue
-    //             }
-    //             if (x == minX) {
-    //                 // Left side
-    //                 if (y == minY) {
-    //                     // Top left
-    //                     await drawSprite(x, y, tileMap.topLeft)
-    //                 } else if (y == maxY) {
-    //                     // Bottom left
-    //                     await drawSprite(x, y, tileMap.bottomLeft)
-    //                 } else {
-    //                     // Left
-    //                     await drawSprite(x, y, tileMap.left)
-    //                 }
-    //             } else if (x == maxX) {
-    //                 // Right side
-    //                 if (y == minY) {
-    //                     // Top right
-    //                     await drawSprite(x, y, tileMap.topRight)
-    //                 } else if (y == maxY) {
-    //                     // Bottom right
-    //                     await drawSprite(x, y, tileMap.bottomRight)
-    //                 } else {
-    //                     // Right
-    //                     await drawSprite(x, y, tileMap.right)
-    //                 }
-    //             } else if (y == minY) {
-    //                 // Top
-    //                 await drawSprite(x, y, tileMap.top)
-    //             } else if (y == maxY) {
-    //                 // Bottom
-    //                 await drawSprite(x, y, tileMap.bottom)
-    //             } else {
-    //                 // Center
-    //                 await drawSprite(x, y, tileMap.center)
-    //             }
-    //             if (Math.random() < 0.2) {
-    //                 // Draw a random sprite extra1, extra2, extra3
-    //                 // @ts-ignore
-    //                 const sprite = tileMap[`extra${Math.floor(Math.random() * 6) + 1}`]
-    //                 await drawSprite(x, y, sprite)
-    //             }
-    //         }
-    //     }
+        for (let x = originX - waterSize; x < maxX + waterSize; x += 32) {
+            for (let y = originY - waterSize; y < maxY + waterSize; y += 32) {
+                if (x < minX || x > maxX || y < minY || y > maxY) {
+                    // Draw water
+                    await drawSprite(x, y, tileMap.water)
+                    continue
+                }
+                if (x == minX) {
+                    // Left side
+                    if (y == minY) {
+                        // Top left
+                        await drawSprite(x, y, tileMap.topLeft)
+                    } else if (y == maxY) {
+                        // Bottom left
+                        await drawSprite(x, y, tileMap.bottomLeft)
+                    } else {
+                        // Left
+                        await drawSprite(x, y, tileMap.left)
+                    }
+                } else if (x == maxX) {
+                    // Right side
+                    if (y == minY) {
+                        // Top right
+                        await drawSprite(x, y, tileMap.topRight)
+                    } else if (y == maxY) {
+                        // Bottom right
+                        await drawSprite(x, y, tileMap.bottomRight)
+                    } else {
+                        // Right
+                        await drawSprite(x, y, tileMap.right)
+                    }
+                } else if (y == minY) {
+                    // Top
+                    await drawSprite(x, y, tileMap.top)
+                } else if (y == maxY) {
+                    // Bottom
+                    await drawSprite(x, y, tileMap.bottom)
+                } else {
+                    // Center
+                    await drawSprite(x, y, tileMap.center)
+                }
+                if (Math.random() < 0.2) {
+                    // Draw a random sprite extra1, extra2, extra3
+                    // @ts-ignore
+                    const sprite = tileMap[`extra${Math.floor(Math.random() * 6) + 1}`]
+                    await drawSprite(x, y, sprite)
+                }
+            }
+        }
 
-    //     // Save the background canvas as this.backgroundImage (image objects)
-    //     const backgroundImage = new Image()
-    //     backgroundImage.src = invisibleCanvas.toDataURL()
-    //     await new Promise((resolve) => {
-    //         backgroundImage.onerror = () => {
-    //             resolve(null)
-    //         }
-    //         backgroundImage.onload = () => {
-    //             backgroundImage.decode().then(() => {
-    //                 this.backgroundImage = backgroundImage
-    //                 resolve(null)
-    //             }).catch((e) => {
-    //                 console.error(e)
-    //                 resolve(null)
-    //             });
-    //         }
-    //     })
-    //     this.backgroundImage = backgroundImage
-    // }
+        return renderTexture;
+    }
 
     // drawBackground() {
     //     if (!this.canvas || !this.backgroundImage) {

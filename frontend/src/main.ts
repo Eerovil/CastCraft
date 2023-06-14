@@ -120,7 +120,7 @@ async function main() {
   console.log('main: ', globalEntityMap)
   // @ts-ignore
   const gameMap = drawGameMap(pixiApp, globalEntityMap, playerId, mapSize)
-  // gameMap.setBackground(backgroundTileMap,)
+  gameMap.setBackground(backgroundTileMap)
   const touchElement = document.querySelector<HTMLDivElement>('#touch-element')!
   const touchCallbacks = {
     tapNextToPlayer: (direction: number) => {
