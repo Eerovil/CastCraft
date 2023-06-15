@@ -7,3 +7,4 @@ pydantic
 pydantic-to-typescript
 gevent
 websocket-client
+sentry-sdk[flask]

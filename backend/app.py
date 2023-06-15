@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 # -*- encoding: utf-8 -*-
 
+import os
 from flask import Flask, request, redirect
 from flask_socketio import SocketIO, emit
 from sqlitedict import SqliteDict
@@ -20,6 +21,26 @@ import logging
 logger = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.INFO)
+
+
+def debug_mode():
+    return os.environ.get('CC_DEBUG', False) == '1'
+
+
+if not debug_mode():
+    import sentry_sdk
+    from sentry_sdk.integrations.flask import FlaskIntegration
+    sentry_sdk.init(
+        dsn="https://f9913dcaee9f42bb9ad1ef91e04f2261@o4505339492433920.ingest.sentry.io/4505361727225856",
+        integrations=[
+            FlaskIntegration(),
+        ],
+
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        # We recommend adjusting this value in production.
+        traces_sample_rate=1.0
+    )
 
 app = Flask(__name__, static_url_path='/castcraft/', static_folder='../static/')
 
