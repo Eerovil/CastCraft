@@ -10,6 +10,7 @@ import { initializeTopBar } from './topBar.ts'
 import './polyfills.ts'
 import { Application } from 'pixi.js'
 import * as PIXI from 'pixi.js';
+import { showLoadingScreen } from './loadingscreen.ts'
 
 
 Sentry.init({
@@ -121,6 +122,10 @@ async function main() {
   // @ts-ignore
   const gameMap = drawGameMap(pixiApp, globalEntityMap, playerId, mapSize)
   gameMap.setBackground(backgroundTileMap)
+  await showLoadingScreen(gameMap);
+  pixiApp.ticker.add(() => {
+    gameMap.updateAllEntities();
+  });
   const touchElement = document.querySelector<HTMLDivElement>('#touch-element')!
   const touchCallbacks = {
     tapNextToPlayer: (direction: number) => {

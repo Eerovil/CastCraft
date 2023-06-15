@@ -15,7 +15,7 @@ type PixiEntity = {
 }
 
 
-class MapDrawer {
+export class MapDrawer {
     entities: EntityMap
     app: Application
 
@@ -47,13 +47,12 @@ class MapDrawer {
 
         if (this.isMobile) {
             // Find our player
-            this.playerId = playerId;
-            if (!this.playerId) {
-                throw new Error('Could not find player')
-            }
+            this.playerId = playerId || '';
             const player = this.entities[this.playerId]
             if (!player) {
-                throw new Error('Could not find player')
+                // Remove nickname query param
+                window.history.replaceState({}, '', window.location.pathname)
+                window.location.reload()
             }
             this.playerX = player.x
             this.playerY = player.y
@@ -270,6 +269,9 @@ class MapDrawer {
     async setBackground(backgroundTileMap: BackgroundTileMap) {
         // Called from outside to set the background tile map
         this.backgroundTileMap = backgroundTileMap
+    }
+    
+    async buildBackground() {
         const backgroundContainer = await this.rebuildBackground();
         if (backgroundContainer) {
             this.backgroundContainer = backgroundContainer;
@@ -398,12 +400,8 @@ class MapDrawer {
 
 }
 
-
 export function drawGameMap(app: Application, globalEntityMap: EntityMap, playerId: string | null, mapSize: number[]) {
-    const mapDrawer = new MapDrawer(app, globalEntityMap, playerId, mapSize)
-    app.ticker.add(() => {
-        mapDrawer.updateAllEntities();
-    });
+    const mapDrawer = new MapDrawer(app, globalEntityMap, playerId, mapSize);
     (window as any).mapDrawer = mapDrawer;
     return mapDrawer;
 }
