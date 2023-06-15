@@ -5,6 +5,7 @@ import { Entity, Sprite as APISprite } from './apiTypes'
 import { getSpritesAsTextures, getSpritesValuesHash } from './drawUtils'
 import { BackgroundTileMap, EntityMap } from './moreTypes'
 import { getCurrentTime } from './timeUtils'
+import { logger } from '@sentry/utils'
 
 
 type PixiEntity = {
@@ -234,7 +235,7 @@ class MapDrawer {
                 for (let spriteIndex = 0; spriteIndex < spriteCount; spriteIndex++) {
                     const sprite = pixiEntity.sprites[spriteIndex]
                     if (!sprite) {
-                        debugger;
+                        logger.error(new Error(`Sprite ${spriteIndex} is missing`))
                     }
                     sprite.textures = textureLists[spriteIndex]
                     sprite.loop = true
